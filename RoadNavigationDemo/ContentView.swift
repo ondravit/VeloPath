@@ -8,17 +8,14 @@
 import SwiftUI
 
 struct ContentView: View {
+    let roads = GeoJSONService.loadRoads(from: "roads")
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        MapView(roads: roads)
     }
 }
 
 #Preview {
     ContentView()
 }
+
