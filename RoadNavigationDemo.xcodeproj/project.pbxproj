@@ -10,22 +10,9 @@
 		6FDE69B82E9584CE00A846D7 /* RoadNavigationDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoadNavigationDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		6F924FCA2E95960600BA6262 /* Exceptions for "RoadNavigationDemo" folder in "RoadNavigationDemo" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Models/Untitled.swift,
-			);
-			target = 6FDE69B72E9584CE00A846D7 /* RoadNavigationDemo */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6FDE69BA2E9584CE00A846D7 /* RoadNavigationDemo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				6F924FCA2E95960600BA6262 /* Exceptions for "RoadNavigationDemo" folder in "RoadNavigationDemo" target */,
-			);
 			path = RoadNavigationDemo;
 			sourceTree = "<group>";
 		};
