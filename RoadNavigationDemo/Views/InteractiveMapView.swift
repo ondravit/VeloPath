@@ -94,8 +94,17 @@ struct InteractiveMapView: UIViewRepresentable {
         func calculateRoute() {
             guard let start = parent.startCoord, let end = parent.endCoord else { return }
             let routingService = RoutingService(roadSegments: parent.roads)
-            parent.routeCoords = routingService.route(from: start, to: end)
+            
+            Task {
+                // Perform route calculation asynchronously
+                let coords = await routingService.route(from: start, to: end)
+                await MainActor.run {
+                    parent.routeCoords = coords
+                }
+            }
         }
+
+
         
         // MARK: - MKMapViewDelegate
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {

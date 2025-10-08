@@ -37,7 +37,7 @@ class Dijkstra {
                 let neighbor = edge.to
                 if !unvisited.contains(neighbor) { continue }
                 
-                let tentative = (distances[current] ?? Double.infinity) + edge.weight
+                let tentative = (distances[current] ?? Double.infinity) + edge.cost
                 if tentative < (distances[neighbor] ?? Double.infinity) {
                     distances[neighbor] = tentative
                     previous[neighbor] = current

@@ -10,9 +10,22 @@
 		6FDE69B82E9584CE00A846D7 /* RoadNavigationDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoadNavigationDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		6F6921552E96E4CE0050FD8E /* Exceptions for "RoadNavigationDemo" folder in "RoadNavigationDemo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Algorithms/Dijkstra.swift,
+			);
+			target = 6FDE69B72E9584CE00A846D7 /* RoadNavigationDemo */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6FDE69BA2E9584CE00A846D7 /* RoadNavigationDemo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6F6921552E96E4CE0050FD8E /* Exceptions for "RoadNavigationDemo" folder in "RoadNavigationDemo" target */,
+			);
 			path = RoadNavigationDemo;
 			sourceTree = "<group>";
 		};
@@ -85,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 6FDE69B32E9584CE00A846D7 /* Build configuration list for PBXProject "RoadNavigationDemo" */;
+			buildConfigurationList = 6FDE69B32E9584CE00A846D7 /* Build configuration list for PBXProject "VeloPath" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -319,7 +332,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6FDE69B32E9584CE00A846D7 /* Build configuration list for PBXProject "RoadNavigationDemo" */ = {
+		6FDE69B32E9584CE00A846D7 /* Build configuration list for PBXProject "VeloPath" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FDE69C12E9584D000A846D7 /* Debug */,
