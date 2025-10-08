@@ -9,9 +9,18 @@ import Foundation
 import MapKit
 
 class GeoJSONService {
+    static func loadRoadsAsync(from fileName: String) async -> [RoadSegment] {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let roads = loadRoads(from: fileName)
+                continuation.resume(returning: roads)
+            }
+        }
+    }
+    
     static func loadRoads(from fileName: String) -> [RoadSegment] {
         guard let url = Bundle.main.url(forResource: "Stav_povrchu_silnic", withExtension: "geojson") else {
-            print("GeoJSON not found: \(fileName).geojson")
+            print("GeoJSON not found: Stav_povrchu_silnic.geojson")
             return []
         }
 
@@ -49,17 +58,26 @@ extension MKGeoJSONFeature {
     func propertiesAsCondition() -> RoadSegment.RoadCondition {
         guard let propData = self.properties,
               let dict = try? JSONSerialization.jsonObject(with: propData, options: .allowFragments) as? [String: Any],
-              let stav = dict["stav_sil"] as? String else {
+              let rawStav = dict["stav_sil"] as? String else {
             return .unknown
         }
         
+        let stav = rawStav
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .folding(options: .diacriticInsensitive, locale: .current)
+        
+        
         switch stav {
-        case "výborný": return .excellent
-        case "dobrý": return .good
-        case "nevyhovující": return .poor
-        case "havarijní": return .bad
-        case "SUPERhavarijní": return .superbad
-        default: return .unknown
+        case "vyborny": return .excellent
+        case "dobry": return .good
+        case "vyhovujici": return .satisfactory
+        case "nevyhovujici": return .unsatisfactory
+        case "havarijni": return .emergency
+        case "superhavarijni": return .superemergency
+        default:
+            print("Neznámý stav silnice \(rawStav)")
+            return .unknown
         }
     }
 }

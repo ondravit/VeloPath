@@ -8,14 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
-    let roads = GeoJSONService.loadRoads(from: "roads")
-    
     var body: some View {
-        MapView(roads: roads)
+        MapContainerView()
     }
 }
 
 #Preview {
     ContentView()
 }
-

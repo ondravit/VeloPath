@@ -50,11 +50,12 @@ class RoadGraph {
     private func conditionMultiplier(_ condition: RoadSegment.RoadCondition) -> Double {
         switch condition {
         case .excellent: return 1.0
-        case .good: return 1.2
-        case .poor: return 1.5
-        case .bad: return 2.0
-        case .superbad: return 3.0
-        case .unknown: return 1.5
+        case .good: return 1.3
+        case .satisfactory: return 1.5
+        case .unsatisfactory: return 2.0
+        case .emergency: return 2.5
+        case .superemergency: return 3.0
+        case .unknown: return 1.75
         }
     }
 }
