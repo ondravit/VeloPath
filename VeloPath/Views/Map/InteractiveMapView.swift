@@ -130,8 +130,8 @@ struct InteractiveMapView: UIViewRepresentable {
     // Color mapping
     func color(for condition: RoadSegment.RoadCondition) -> UIColor {
         switch condition {
-        case .excellent: return .green
-        case .good: return .systemGreen
+        case .excellent: return UIColor(red: 0.0, green: 0.3, blue: 0.0, alpha: 1)
+        case .good: return .green
         case .satisfactory: return .yellow
         case .unsatisfactory: return .orange
         case .emergency: return .red

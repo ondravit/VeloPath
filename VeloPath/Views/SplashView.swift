@@ -14,7 +14,7 @@ struct SplashView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 16) {
-                Image("VeloPath") // same image name as in LaunchScreen
+                Image("VeloPath")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 160, height: 160)

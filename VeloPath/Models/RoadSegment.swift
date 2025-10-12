@@ -15,13 +15,13 @@ struct RoadSegment: Identifiable {
     let condition: RoadCondition
     
     enum RoadCondition: String {
-        case excellent = "výborný"
-        case good = "dobrý"
-        case satisfactory = "vyhovující"
-        case unsatisfactory = "nevyhovující"
-        case emergency = "havarijní"
-        case superemergency = "SUPERhavarijní"
-        case unknown
+        case excellent = "Výborný"
+        case good = "Dobrý"
+        case satisfactory = "Vyhovující"
+        case unsatisfactory = "Nevyhovující"
+        case emergency = "Havarijní"
+        case superemergency = "Superhavarijní"
+        case unknown = "Neznámý"
     }
 }
 
