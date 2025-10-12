@@ -24,11 +24,8 @@ struct InteractiveMapView: UIViewRepresentable {
         mapView.showsUserLocation = true
         mapView.mapType = .standard
         
-        // Draw all roads as polylines
-        for road in roads {
-            let polyline = MKPolyline(coordinates: road.coordinates, count: road.coordinates.count)
-            mapView.addOverlay(polyline)
-        }
+        let overlay = RoadsOverlay(roads: roads)
+        mapView.addOverlay(overlay)
         
         // Add tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.mapTapped(_:)))
@@ -114,28 +111,18 @@ struct InteractiveMapView: UIViewRepresentable {
         
         // MARK: - MKMapViewDelegate
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            guard let polyline = overlay as? MKPolyline else {
-                return MKOverlayRenderer(overlay: overlay)
+            if let roadsOverlay = overlay as? RoadsOverlay {
+                return RoadsOverlayRenderer(overlay: roadsOverlay)
             }
-            
-            let renderer = MKPolylineRenderer(polyline: polyline)
-            
-            // Route polyline
-            if overlay.title == "route" {
+
+            if let polyline = overlay as? MKPolyline {
+                let renderer = MKPolylineRenderer(polyline: polyline)
                 renderer.strokeColor = .systemBlue
-                renderer.lineWidth = 4
+                renderer.lineWidth = 3.5
+                return renderer
             }
-            // Road polylines
-            else if let road = parent.roads.first(where: { $0.matches(polyline: polyline) }) {
-                renderer.strokeColor = parent.color(for: road.condition)
-                renderer.lineWidth = 3
-            } else {
-                print("⚠️ Polyline not matched to any road!")
-                renderer.strokeColor = .gray
-                renderer.lineWidth = 3
-            }
-            
-            return renderer
+
+            return MKOverlayRenderer(overlay: overlay)
         }
     }
     
