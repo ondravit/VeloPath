@@ -19,8 +19,8 @@ class GeoJSONService {
     }
     
     static func loadRoads(from fileName: String) -> [RoadSegment] {
-        guard let url = Bundle.main.url(forResource: "Stav_povrchu_silnic", withExtension: "geojson") else {
-            print("GeoJSON not found: Stav_povrchu_silnic.geojson")
+        guard let url = Bundle.main.url(forResource: "Silnice_KHK_all_merged", withExtension: "geojson") else {
+            print("GeoJSON not found")
             return []
         }
 

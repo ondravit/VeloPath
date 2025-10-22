@@ -13,9 +13,11 @@ struct TopPanel: View {
         VStack {
             HStack {
                 HStack(spacing: 8) {
-                    Image(systemName: "bicycle")
-                        .foregroundColor(Color(red: 52/255, green: 189/255, blue: 253/255))
-                        .font(.title2.bold())
+                    Image("VeloPath")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 25, height: 25)
+                        .shadow(radius: 10)
                     Text("VeloPath")
                         .font(.title2.bold())
                         .foregroundColor(Color(red: 52/255, green: 189/255, blue: 253/255))
@@ -29,4 +31,3 @@ struct TopPanel: View {
         }
     }
 }
-

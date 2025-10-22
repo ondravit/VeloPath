@@ -9,10 +9,13 @@ import SwiftUI
 import MapKit
 
 struct InteractiveMapView: UIViewRepresentable {
-    let roads: [RoadSegment]
     @Binding var routeCoords: [CLLocationCoordinate2D]
     @Binding var startCoord: CLLocationCoordinate2D?
     @Binding var endCoord: CLLocationCoordinate2D?
+    let allRoads: [RoadSegment]
+    let knownRoads: [RoadSegment]
+    let unknownRoads: [RoadSegment]
+    var userLocation: CLLocationCoordinate2D?
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -21,11 +24,12 @@ struct InteractiveMapView: UIViewRepresentable {
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
+        context.coordinator.mapView = mapView
+        
         mapView.showsUserLocation = true
         mapView.mapType = .standard
         
-        let overlay = RoadsOverlay(roads: roads)
-        mapView.addOverlay(overlay)
+        addRoadOverlays(to: mapView)
         
         // Add tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.mapTapped(_:)))
@@ -42,10 +46,16 @@ struct InteractiveMapView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        // Remove previous route overlay
-        let oldRoutes = uiView.overlays.filter { $0.title == "route" }
-        uiView.removeOverlays(oldRoutes)
+        // Keep coordinator’s weak reference up to date (in case of re-creation)
+        if context.coordinator.mapView !== uiView {
+            context.coordinator.mapView = uiView
+        }
         
+        uiView.removeOverlays(uiView.overlays.compactMap { $0 as? RoadsOverlay })
+        // …a znovu je přidej podle aktuálního režimu (prázdné pole = nic se nepřidá)
+        addRoadOverlays(to: uiView)
+        
+        uiView.removeOverlays(uiView.overlays.filter { $0.title == "route" })
         // Draw new route
         if !routeCoords.isEmpty {
             let routeLine = MKPolyline(coordinates: routeCoords, count: routeCoords.count)
@@ -69,13 +79,56 @@ struct InteractiveMapView: UIViewRepresentable {
         }
     }
     
+    private func addRoadOverlays(to mapView: MKMapView) {
+        
+        // ⚙️ Neznámé silnice – šedé na pozadí
+        if !unknownRoads.isEmpty {
+            let unknownOverlay = RoadsOverlay(roads: unknownRoads)
+            mapView.addOverlay(unknownOverlay, level: .aboveRoads)
+        }
+
+        // ✅ Známé silnice – barevné podle kvality
+        if !knownRoads.isEmpty {
+            let knownOverlay = RoadsOverlay(roads: knownRoads)
+            mapView.addOverlay(knownOverlay, level: .aboveRoads)
+        }
+    }
+
+    
     // MARK: - Coordinator
     class Coordinator: NSObject, MKMapViewDelegate {
         var parent: InteractiveMapView
+        weak var mapView: MKMapView?
         
         init(_ parent: InteractiveMapView) {
             self.parent = parent
+            super.init()
+            print("📡 Coordinator initialized, adding observer")
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(recenterMap),
+                name: .recenterMap,
+                object: nil
+            )
         }
+        
+        @objc private func recenterMap() {
+            print("📩 Received .recenterMap notification")
+                guard let mapView = mapView else {
+                    print("⚠️ No mapView reference!")
+                    return
+                }
+            let coord = mapView.userLocation.coordinate
+                if coord.latitude == 0 && coord.longitude == 0 {
+                    print("⚠️ Map has no valid user location yet.")
+                    return
+                }
+
+                print("📍 Centering on \(coord.latitude), \(coord.longitude)")
+                let region = MKCoordinateRegion(center: coord,
+                                                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
+                mapView.setRegion(region, animated: true)
+            }
         
         @objc func mapTapped(_ gesture: UITapGestureRecognizer) {
             let mapView = gesture.view as! MKMapView
@@ -96,7 +149,7 @@ struct InteractiveMapView: UIViewRepresentable {
         
         func calculateRoute() {
             guard let start = parent.startCoord, let end = parent.endCoord else { return }
-            let routingService = RoutingService(roadSegments: parent.roads)
+            let routingService = RoutingService(roadSegments: parent.allRoads)
             
             Task {
                 // Perform route calculation asynchronously
@@ -107,8 +160,6 @@ struct InteractiveMapView: UIViewRepresentable {
             }
         }
 
-
-        
         // MARK: - MKMapViewDelegate
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let roadsOverlay = overlay as? RoadsOverlay {
@@ -124,6 +175,14 @@ struct InteractiveMapView: UIViewRepresentable {
 
             return MKOverlayRenderer(overlay: overlay)
         }
+        
+        func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
+                let coord = userLocation.coordinate
+                print("📍 MKMapView didUpdateUserLocation:", coord)
+                DispatchQueue.main.async {
+                    self.parent.userLocation = coord
+                }
+            }
     }
     
     
@@ -139,5 +198,7 @@ struct InteractiveMapView: UIViewRepresentable {
         case .unknown: return .gray
         }
     }
-
+}
+extension Notification.Name {
+    static let recenterMap = Notification.Name("recenterMap")
 }

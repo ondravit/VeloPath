@@ -25,33 +25,54 @@ final class AppCoordinator: ObservableObject {
 
 struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
-    @State private var plannerOffset: CGFloat = 310
+    @StateObject private var locationManager = LocationManager()
+    @State private var plannerOffset: CGFloat = 305
+    @State private var showRoadsOverlay = true
+    @State private var recenterTrigger = false
+    @State private var roadDisplayMode: RoadDisplayMode = .knownOnly
+
+
+    
 
     var body: some View {
         Group {
             if coordinator.isLoading {
                 SplashView()
+                    .transition(.opacity)
             } else {
-                ZStack {
-                    // 🗺 Background map view
-                    MapContainerView(roads: coordinator.roads)
-                        .ignoresSafeArea()
-
-                    TopPanel()
-
-                    SidePanel()
-
-                    // 🧱 Bottom route bar
-                    VStack {
-                        Spacer()
-                        RoutePlannerPanel(offset: $plannerOffset)
-                    }
-                    .ignoresSafeArea(edges: .bottom)
-                }
-                .transition(.opacity)
+                mainInterface
+                    .transition(.opacity)
             }
         }
         .onAppear { coordinator.load() }
-        .animation(.easeInOut(duration: 0.4), value: coordinator.isLoading)
+        .animation(.easeInOut(duration: 0.5), value: coordinator.isLoading)
+        .onChange(of: coordinator.isLoading) { oldValue, newValue in
+            // 🧭 Only trigger after splash has *finished fading out*
+            if oldValue == true && newValue == false {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    locationManager.requestAuthorization()
+                }
+            }
+        }
+    }
+    
+    private var mainInterface: some View {
+        ZStack {
+            MapContainerView(
+                roads: coordinator.roads,
+                roadDisplayMode: roadDisplayMode,
+                userLocation: locationManager.userLocation
+            )
+            .ignoresSafeArea()
+
+            TopPanel()
+            SidePanel(roadDisplayMode: $roadDisplayMode)
+
+            VStack {
+                Spacer()
+                RoutePlannerPanel(offset: $plannerOffset)
+            }
+            .ignoresSafeArea(edges: .bottom)
+        }
     }
 }
