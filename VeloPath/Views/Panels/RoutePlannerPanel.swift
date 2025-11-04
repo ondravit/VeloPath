@@ -14,7 +14,7 @@ struct RoutePlannerPanel: View {
 
     @State private var points: [String] = ["Start", "End"]
     @State private var locations: [String] = ["", ""]
-    @State private var qualityBalance: Double = 0.5
+    @Binding var qualityBalance: Double
 
     var body: some View {
         let totalOffset = offset + dragOffset
@@ -91,7 +91,7 @@ struct RoutePlannerPanel: View {
                 Divider()
 
                 Button {
-                    calculateRoute()
+                    NotificationCenter.default.post(name: .recalculateRoute, object: nil)
                 } label: {
                     Label("Naplánovat trasu", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
                         .font(.headline)
@@ -147,7 +147,4 @@ struct RoutePlannerPanel: View {
         locations.remove(at: index)
     }
 
-    private func calculateRoute() {
-        print("🧭 Calculating route for \(points.count) points with balance \(qualityBalance)")
-    }
 }

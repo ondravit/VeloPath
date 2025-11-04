@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var showRoadsOverlay = true
     @State private var recenterTrigger = false
     @State private var roadDisplayMode: RoadDisplayMode = .knownOnly
+    @State private var qualityBalance: Double = 0.5
 
 
     
@@ -61,7 +62,8 @@ struct ContentView: View {
             MapContainerView(
                 roads: coordinator.roads,
                 roadDisplayMode: roadDisplayMode,
-                userLocation: locationManager.userLocation
+                userLocation: locationManager.userLocation,
+                qualityBalance: $qualityBalance
             )
             .ignoresSafeArea()
 
@@ -70,7 +72,8 @@ struct ContentView: View {
 
             VStack {
                 Spacer()
-                RoutePlannerPanel(offset: $plannerOffset)
+                RoutePlannerPanel(offset: $plannerOffset,
+                                  qualityBalance: $qualityBalance)
             }
             .ignoresSafeArea(edges: .bottom)
         }

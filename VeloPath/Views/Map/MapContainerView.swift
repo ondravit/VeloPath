@@ -13,6 +13,8 @@ struct MapContainerView: View {
     let roads: [RoadSegment]
     let roadDisplayMode: RoadDisplayMode
     var userLocation: CLLocationCoordinate2D?
+    @Binding var qualityBalance: Double
+    
     @State private var routeCoords: [CLLocationCoordinate2D] = []
     @State private var startCoord: CLLocationCoordinate2D?
     @State private var endCoord: CLLocationCoordinate2D?
@@ -49,7 +51,8 @@ struct MapContainerView: View {
                 allRoads: roads,
                 knownRoads: knownToShow,
                 unknownRoads: unknownToShow,
-                userLocation: userLocation
+                userLocation: userLocation,
+                qualityBalance: $qualityBalance
             )
             .edgesIgnoringSafeArea(.all)
         }

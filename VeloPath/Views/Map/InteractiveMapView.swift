@@ -16,6 +16,7 @@ struct InteractiveMapView: UIViewRepresentable {
     let knownRoads: [RoadSegment]
     let unknownRoads: [RoadSegment]
     var userLocation: CLLocationCoordinate2D?
+    @Binding var qualityBalance: Double
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -106,6 +107,12 @@ struct InteractiveMapView: UIViewRepresentable {
             print("📡 Coordinator initialized, adding observer")
             NotificationCenter.default.addObserver(
                 self,
+                selector: #selector(recalculate),
+                name: .recalculateRoute,
+                object: nil
+            )
+            NotificationCenter.default.addObserver(
+                self,
                 selector: #selector(recenterMap),
                 name: .recenterMap,
                 object: nil
@@ -147,13 +154,15 @@ struct InteractiveMapView: UIViewRepresentable {
             }
         }
         
+        @objc private func recalculate() { calculateRoute() }
+        
         func calculateRoute() {
             guard let start = parent.startCoord, let end = parent.endCoord else { return }
             let routingService = RoutingService(roadSegments: parent.allRoads)
-            
+            let q = parent.qualityBalance
             Task {
                 // Perform route calculation asynchronously
-                let coords = await routingService.route(from: start, to: end)
+                let coords = await routingService.route(from: start, to: end, quality: q)
                 await MainActor.run {
                     parent.routeCoords = coords
                 }
@@ -201,4 +210,5 @@ struct InteractiveMapView: UIViewRepresentable {
 }
 extension Notification.Name {
     static let recenterMap = Notification.Name("recenterMap")
+    static let recalculateRoute = Notification.Name("recalculateRoute")
 }

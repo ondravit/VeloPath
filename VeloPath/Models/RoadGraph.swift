@@ -63,7 +63,7 @@ final class RoadGraph {
         case .unsatisfactory:  return 1.45
         case .emergency:       return 1.90
         case .superemergency:  return 2.50
-        case .unknown:         return 1.35
+        case .unknown:         return 2.00
         }
     }
 
