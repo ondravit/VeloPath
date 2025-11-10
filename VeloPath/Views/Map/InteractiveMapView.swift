@@ -10,6 +10,7 @@ import MapKit
 
 struct InteractiveMapView: UIViewRepresentable {
     @Binding var routeCoords: [CLLocationCoordinate2D]
+    @Binding var routePlan: RoutePlan
     @Binding var startCoord: CLLocationCoordinate2D?
     @Binding var endCoord: CLLocationCoordinate2D?
     let allRoads: [RoadSegment]
@@ -17,6 +18,7 @@ struct InteractiveMapView: UIViewRepresentable {
     let unknownRoads: [RoadSegment]
     var userLocation: CLLocationCoordinate2D?
     @Binding var qualityBalance: Double
+    
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -117,6 +119,29 @@ struct InteractiveMapView: UIViewRepresentable {
                 name: .recenterMap,
                 object: nil
             )
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(exportGPX),
+                name: .exportGPX,
+                object: nil
+            )
+        }
+        
+        @objc private func exportGPX() {
+            guard !parent.routeCoords.isEmpty,
+                    let url = GPXExporter.exportRoute(parent.routeCoords) else {
+                print("⚠️ Žádná trasa k exportu.")
+                return
+            }
+            print("✅ GPX exported to: \(url.path)")
+            
+            // 💡 Volitelné: systémové sdílení (Share Sheet)
+            if let mapView = mapView {
+                let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+                if let controller = mapView.window?.rootViewController {
+                    controller.present(activityVC, animated: true)
+                }
+            }
         }
         
         @objc private func recenterMap() {
@@ -138,33 +163,42 @@ struct InteractiveMapView: UIViewRepresentable {
             }
         
         @objc func mapTapped(_ gesture: UITapGestureRecognizer) {
-            let mapView = gesture.view as! MKMapView
+            guard let mapView = gesture.view as? MKMapView else { return }
             let point = gesture.location(in: mapView)
             let coord = mapView.convert(point, toCoordinateFrom: mapView)
             
-            if parent.startCoord == nil {
-                parent.startCoord = coord
-            } else if parent.endCoord == nil {
-                parent.endCoord = coord
-                calculateRoute()
-            } else {
-                parent.startCoord = coord
-                parent.endCoord = nil
-                parent.routeCoords = []
+            parent.routePlan.points.append(coord)
+                
+            mapView.removeAnnotations(mapView.annotations)
+            for (i, c) in parent.routePlan.points.enumerated() {
+                let anno = MKPointAnnotation()
+                anno.coordinate = c
+                anno.title = (i == 0) ? "Start" :
+                                (i == parent.routePlan.points.count - 1 ? "Cíl" : "Bod \(i)")
+                mapView.addAnnotation(anno)
             }
         }
         
         @objc private func recalculate() { calculateRoute() }
         
         func calculateRoute() {
-            guard let start = parent.startCoord, let end = parent.endCoord else { return }
-            let routingService = RoutingService(roadSegments: parent.allRoads)
+            guard parent.routePlan.hasAtLeastStartAndEnd else { return }
+
+            let coords = parent.routePlan.points
             let q = parent.qualityBalance
+            let routingService = RoutingService(roadSegments: parent.allRoads)
+
             Task {
-                // Perform route calculation asynchronously
-                let coords = await routingService.route(from: start, to: end, quality: q)
+                var fullRoute: [CLLocationCoordinate2D] = []
+
+                for i in 0..<(coords.count - 1) {
+                    let segment = await routingService.route(from: coords[i], to: coords[i+1], quality: q)
+                    if i > 0 { fullRoute.removeLast() } // spojení bodů
+                    fullRoute.append(contentsOf: segment)
+                }
+
                 await MainActor.run {
-                    parent.routeCoords = coords
+                    parent.routeCoords = fullRoute
                 }
             }
         }
@@ -211,4 +245,5 @@ struct InteractiveMapView: UIViewRepresentable {
 extension Notification.Name {
     static let recenterMap = Notification.Name("recenterMap")
     static let recalculateRoute = Notification.Name("recalculateRoute")
+    static let exportGPX = Notification.Name("exportGPX")
 }

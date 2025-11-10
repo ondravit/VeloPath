@@ -14,7 +14,7 @@ struct MapContainerView: View {
     let roadDisplayMode: RoadDisplayMode
     var userLocation: CLLocationCoordinate2D?
     @Binding var qualityBalance: Double
-    
+    @Binding var routePlan: RoutePlan
     @State private var routeCoords: [CLLocationCoordinate2D] = []
     @State private var startCoord: CLLocationCoordinate2D?
     @State private var endCoord: CLLocationCoordinate2D?
@@ -46,6 +46,7 @@ struct MapContainerView: View {
         ZStack {
             InteractiveMapView(
                 routeCoords: $routeCoords,
+                routePlan: $routePlan,
                 startCoord: $startCoord,
                 endCoord: $endCoord,
                 allRoads: roads,

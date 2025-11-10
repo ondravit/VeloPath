@@ -103,6 +103,19 @@ struct RoutePlannerPanel: View {
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 10)
+                
+                Button {
+                    NotificationCenter.default.post(name: .exportGPX, object: nil)
+                } label: {
+                    Label("Export do GPX", systemImage: "square.and.arrow.up")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal)
+
             }
         }
         .background(.ultraThinMaterial)

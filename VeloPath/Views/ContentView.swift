@@ -31,7 +31,7 @@ struct ContentView: View {
     @State private var recenterTrigger = false
     @State private var roadDisplayMode: RoadDisplayMode = .knownOnly
     @State private var qualityBalance: Double = 0.5
-
+    @State private var routePlan = RoutePlan()
 
     
 
@@ -63,7 +63,8 @@ struct ContentView: View {
                 roads: coordinator.roads,
                 roadDisplayMode: roadDisplayMode,
                 userLocation: locationManager.userLocation,
-                qualityBalance: $qualityBalance
+                qualityBalance: $qualityBalance,
+                routePlan: $routePlan
             )
             .ignoresSafeArea()
 
