@@ -13,41 +13,46 @@ struct InteractiveMapView: UIViewRepresentable {
     @Binding var routePlan: RoutePlan
     @Binding var startCoord: CLLocationCoordinate2D?
     @Binding var endCoord: CLLocationCoordinate2D?
+    @Binding var isPlacingWaypoint: Bool
+    @Binding var insertionIndex: Int?
     let allRoads: [RoadSegment]
     let knownRoads: [RoadSegment]
     let unknownRoads: [RoadSegment]
     var userLocation: CLLocationCoordinate2D?
     @Binding var qualityBalance: Double
-    
+
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-    
+
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
         context.coordinator.mapView = mapView
-        
+
         mapView.showsUserLocation = true
         mapView.mapType = .standard
-        
+
         addRoadOverlays(to: mapView)
-        
+
         // Add tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.mapTapped(_:)))
         mapView.addGestureRecognizer(tapGesture)
-        
+
         // Set initial region
         let region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 50.4, longitude: 15.9),
             span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
         )
         mapView.setRegion(region, animated: false)
-        
-        return mapView
+
+        // Initialize annotations from any existing routePlan points
+        context.coordinator.refreshAnnotations(on: mapView)
+
+         return mapView
     }
-    
+
     func updateUIView(_ uiView: MKMapView, context: Context) {
         // Keep coordinator’s weak reference up to date (in case of re-creation)
         if context.coordinator.mapView !== uiView {
@@ -66,20 +71,9 @@ struct InteractiveMapView: UIViewRepresentable {
             uiView.addOverlay(routeLine)
         }
         
-        // Remove previous start/end annotations
-        uiView.removeAnnotations(uiView.annotations)
-        if let start = startCoord {
-            let startAnno = MKPointAnnotation()
-            startAnno.coordinate = start
-            startAnno.title = "Start"
-            uiView.addAnnotation(startAnno)
-        }
-        if let end = endCoord {
-            let endAnno = MKPointAnnotation()
-            endAnno.coordinate = end
-            endAnno.title = "End"
-            uiView.addAnnotation(endAnno)
-        }
+        // Keep annotations synchronized with the authoritative `routePlan.points`.
+        // Use coordinator helper so annotations are recreated consistently and do not get lost on overlay redraw.
+        context.coordinator.refreshAnnotations(on: uiView)
     }
     
     private func addRoadOverlays(to mapView: MKMapView) {
@@ -125,6 +119,18 @@ struct InteractiveMapView: UIViewRepresentable {
                 name: .exportGPX,
                 object: nil
             )
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(confirmPlacement),
+                name: .confirmPlacement,
+                object: nil
+            )
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(cancelPlacement),
+                name: .cancelPlacement,
+                object: nil
+            )
         }
         
         @objc private func exportGPX() {
@@ -167,17 +173,16 @@ struct InteractiveMapView: UIViewRepresentable {
             let point = gesture.location(in: mapView)
             let coord = mapView.convert(point, toCoordinateFrom: mapView)
             
-            parent.routePlan.points.append(coord)
-                
-            mapView.removeAnnotations(mapView.annotations)
-            for (i, c) in parent.routePlan.points.enumerated() {
-                let anno = MKPointAnnotation()
-                anno.coordinate = c
-                anno.title = (i == 0) ? "Start" :
-                                (i == parent.routePlan.points.count - 1 ? "Cíl" : "Bod \(i)")
-                mapView.addAnnotation(anno)
+            // Ignore taps while placing a waypoint
+            if parent.isPlacingWaypoint {
+                return
             }
-        }
+            
+            parent.routePlan.points.append(coord)
+            
+            // refresh/rebuild annotations from the updated routePlan
+            refreshAnnotations(on: mapView)
+         }
         
         @objc private func recalculate() { calculateRoute() }
         
@@ -199,7 +204,48 @@ struct InteractiveMapView: UIViewRepresentable {
 
                 await MainActor.run {
                     parent.routeCoords = fullRoute
+                    // If we have a direct reference to the mapView, update overlays immediately so the route is visible
+                    if let mv = self.mapView {
+                        // remove existing route overlays
+                        let existingRouteOverlays = mv.overlays.filter { $0.title == "route" }
+                        if !existingRouteOverlays.isEmpty { mv.removeOverlays(existingRouteOverlays) }
+                        if !fullRoute.isEmpty {
+                            let routeLine = MKPolyline(coordinates: fullRoute, count: fullRoute.count)
+                            routeLine.title = "route"
+                            mv.addOverlay(routeLine)
+                        }
+                        // Also refresh annotations to ensure pins are present
+                        self.refreshAnnotations(on: mv)
+                    }
+                 }
+            }
+        }
+
+        @objc private func confirmPlacement() {
+            guard let mapView = mapView else { return }
+            let center = mapView.centerCoordinate
+            print("📍 Confirm placement at center: \(center.latitude), \(center.longitude)")
+            // insert at insertionIndex if provided, otherwise append
+            DispatchQueue.main.async {
+                if let idx = self.parent.insertionIndex, idx >= 0 && idx <= self.parent.routePlan.points.count {
+                    self.parent.routePlan.points.insert(center, at: idx)
+                } else {
+                    self.parent.routePlan.points.append(center)
                 }
+                self.parent.insertionIndex = nil
+                self.parent.isPlacingWaypoint = false
+            }
+
+            // rebuild annotations to include the newly inserted point
+            refreshAnnotations(on: mapView)
+
+             recalculate()
+         }
+
+        @objc private func cancelPlacement() {
+            DispatchQueue.main.async {
+                self.parent.insertionIndex = nil
+                self.parent.isPlacingWaypoint = false
             }
         }
 
@@ -226,6 +272,75 @@ struct InteractiveMapView: UIViewRepresentable {
                     self.parent.userLocation = coord
                 }
             }
+        
+        // MARK: - Updated Coordinator methods
+
+        func refreshAnnotations(on mapView: MKMapView) {
+            // Ensure we are on the main thread for UI updates
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                let currentPoints = self.parent.routePlan.points
+                let existingAnnotations = mapView.annotations.filter { !($0 is MKUserLocation) }
+                
+                // Optimization: Only refresh if the count changed to prevent flickering
+                if existingAnnotations.count == currentPoints.count {
+                    // Optional: Update coordinates of existing pins instead of recreating
+                    return
+                }
+
+                mapView.removeAnnotations(existingAnnotations)
+
+                let newAnnos = currentPoints.enumerated().map { (i, coord) -> MKPointAnnotation in
+                    let anno = MKPointAnnotation()
+                    anno.coordinate = coord
+                    if i == 0 {
+                        anno.title = "Start"
+                    } else if i == currentPoints.count - 1 {
+                        anno.title = "Cíl"
+                    } else {
+                        anno.title = "Bod \(i)"
+                    }
+                    return anno
+                }
+                
+                mapView.addAnnotations(newAnnos)
+            }
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            // 1. Skip user location blue dot
+            if annotation is MKUserLocation { return nil }
+
+            // 2. Use MKMarkerAnnotationView (modern style) or MKPinAnnotationView
+            let identifier = "routePoint"
+            var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+
+            if annotationView == nil {
+                annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                annotationView?.canShowCallout = true
+                annotationView?.animatesWhenAdded = true
+            } else {
+                annotationView?.annotation = annotation
+            }
+
+            // 3. Customize based on title
+            if annotation.title == "Start" {
+                annotationView?.markerTintColor = .systemGreen
+                annotationView?.glyphImage = UIImage(systemName: "play.fill")
+            } else if annotation.title == "Cíl" {
+                annotationView?.markerTintColor = .systemRed
+                annotationView?.glyphImage = UIImage(systemName: "flag.fill")
+            } else {
+                annotationView?.markerTintColor = .systemBlue
+                //annotationView?.glyphColor = .w
+            }
+            
+            // 4. Force visibility
+            annotationView?.displayPriority = .required
+            
+            return annotationView
+        }
     }
     
     
@@ -242,8 +357,11 @@ struct InteractiveMapView: UIViewRepresentable {
         }
     }
 }
+
 extension Notification.Name {
     static let recenterMap = Notification.Name("recenterMap")
     static let recalculateRoute = Notification.Name("recalculateRoute")
     static let exportGPX = Notification.Name("exportGPX")
+    static let confirmPlacement = Notification.Name("confirmPlacement")
+    static let cancelPlacement = Notification.Name("cancelPlacement")
 }

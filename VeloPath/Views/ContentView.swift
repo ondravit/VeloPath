@@ -32,8 +32,8 @@ struct ContentView: View {
     @State private var roadDisplayMode: RoadDisplayMode = .knownOnly
     @State private var qualityBalance: Double = 0.5
     @State private var routePlan = RoutePlan()
-
-    
+    @State private var isPlacingWaypoint = false
+    @State private var insertionIndex: Int? = nil
 
     var body: some View {
         Group {
@@ -64,7 +64,10 @@ struct ContentView: View {
                 roadDisplayMode: roadDisplayMode,
                 userLocation: locationManager.userLocation,
                 qualityBalance: $qualityBalance,
-                routePlan: $routePlan
+                routePlan: $routePlan,
+                isPlacingWaypoint: $isPlacingWaypoint,
+                insertionIndex: $insertionIndex,
+                plannerOffset: $plannerOffset
             )
             .ignoresSafeArea()
 
@@ -73,10 +76,67 @@ struct ContentView: View {
 
             VStack {
                 Spacer()
-                RoutePlannerPanel(offset: $plannerOffset,
-                                  qualityBalance: $qualityBalance)
+                // Hide the planner panel completely while placing a waypoint
+                if !isPlacingWaypoint {
+                    RoutePlannerPanel(offset: $plannerOffset,
+                                      routePlan: $routePlan,
+                                      isPlacingWaypoint: $isPlacingWaypoint,
+                                      insertionIndex: $insertionIndex,
+                                      qualityBalance: $qualityBalance)
+                }
             }
             .ignoresSafeArea(edges: .bottom)
+
+            // Marker + OK/Cancel overlay (above map and above the planner panel)
+            if isPlacingWaypoint {
+                let screen = UIScreen.main.bounds
+
+                VStack(spacing: 8) {
+                    // Pin-only marker: clear pointer using system symbol inside a white circle
+                    ZStack {
+                        Image(systemName: "mappin")
+                            .font(.system(size: 28))
+                            .foregroundColor(.red)
+                    }
+                }
+                .offset(x: 0, y: 0.05)
+                .allowsHitTesting(false)
+                .zIndex(1)
+
+                // Bottom-aligned accept / cancel buttons so they remain selectable when the panel is hidden
+                VStack {
+                    Spacer()
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            NotificationCenter.default.post(name: .cancelPlacement, object: nil)
+                            insertionIndex = nil
+                            isPlacingWaypoint = false
+                        }) {
+                            Text("Zrušit")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color(.systemBackground).opacity(0.95))
+                                .cornerRadius(8)
+                                .shadow(radius: 2)
+                        }
+
+                        Button(action: {
+                            NotificationCenter.default.post(name: .confirmPlacement, object: nil)
+                            isPlacingWaypoint = false
+                        }) {
+                            Text("OK")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                                .shadow(radius: 2)
+                        }
+                    }
+                    .padding(.bottom, 34)
+                    .zIndex(2)
+                }
+            }
         }
     }
 }

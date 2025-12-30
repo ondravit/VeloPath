@@ -15,6 +15,9 @@ struct MapContainerView: View {
     var userLocation: CLLocationCoordinate2D?
     @Binding var qualityBalance: Double
     @Binding var routePlan: RoutePlan
+    @Binding var isPlacingWaypoint: Bool
+    @Binding var insertionIndex: Int?
+    @Binding var plannerOffset: CGFloat
     @State private var routeCoords: [CLLocationCoordinate2D] = []
     @State private var startCoord: CLLocationCoordinate2D?
     @State private var endCoord: CLLocationCoordinate2D?
@@ -49,6 +52,8 @@ struct MapContainerView: View {
                 routePlan: $routePlan,
                 startCoord: $startCoord,
                 endCoord: $endCoord,
+                isPlacingWaypoint: $isPlacingWaypoint,
+                insertionIndex: $insertionIndex,
                 allRoads: roads,
                 knownRoads: knownToShow,
                 unknownRoads: unknownToShow,
