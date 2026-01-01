@@ -20,6 +20,7 @@ struct InteractiveMapView: UIViewRepresentable {
     let unknownRoads: [RoadSegment]
     var userLocation: CLLocationCoordinate2D?
     @Binding var qualityBalance: Double
+    @Binding var routeDistance: Double
 
     
     func makeCoordinator() -> Coordinator {
@@ -60,7 +61,7 @@ struct InteractiveMapView: UIViewRepresentable {
         }
         
         uiView.removeOverlays(uiView.overlays.compactMap { $0 as? RoadsOverlay })
-        // …a znovu je přidej podle aktuálního režimu (prázdné pole = nic se nepřidá)
+        // Re-add road overlays
         addRoadOverlays(to: uiView)
         
         uiView.removeOverlays(uiView.overlays.filter { $0.title == "route" })
@@ -78,13 +79,13 @@ struct InteractiveMapView: UIViewRepresentable {
     
     private func addRoadOverlays(to mapView: MKMapView) {
         
-        // ⚙️ Neznámé silnice – šedé na pozadí
+        // Unknown roads – gray
         if !unknownRoads.isEmpty {
             let unknownOverlay = RoadsOverlay(roads: unknownRoads)
             mapView.addOverlay(unknownOverlay, level: .aboveRoads)
         }
 
-        // ✅ Známé silnice – barevné podle kvality
+        // Known roads – colored by condition
         if !knownRoads.isEmpty {
             let knownOverlay = RoadsOverlay(roads: knownRoads)
             mapView.addOverlay(knownOverlay, level: .aboveRoads)
@@ -187,7 +188,10 @@ struct InteractiveMapView: UIViewRepresentable {
         @objc private func recalculate() { calculateRoute() }
         
         func calculateRoute() {
-            guard parent.routePlan.hasAtLeastStartAndEnd else { return }
+            guard parent.routePlan.hasAtLeastStartAndEnd else {
+                DispatchQueue.main.async { self.parent.routeDistance = 0 }
+                return
+            }
 
             let coords = parent.routePlan.points
             let q = parent.qualityBalance
@@ -201,9 +205,12 @@ struct InteractiveMapView: UIViewRepresentable {
                     if i > 0 { fullRoute.removeLast() } // spojení bodů
                     fullRoute.append(contentsOf: segment)
                 }
+                
+                let distance = fullRoute.totalDistanceInMeters()
 
                 await MainActor.run {
                     parent.routeCoords = fullRoute
+                    self.parent.routeDistance = distance
                     // If we have a direct reference to the mapView, update overlays immediately so the route is visible
                     if let mv = self.mapView {
                         // remove existing route overlays
@@ -283,11 +290,6 @@ struct InteractiveMapView: UIViewRepresentable {
                 let currentPoints = self.parent.routePlan.points
                 let existingAnnotations = mapView.annotations.filter { !($0 is MKUserLocation) }
                 
-                // Optimization: Only refresh if the count changed to prevent flickering
-                if existingAnnotations.count == currentPoints.count {
-                    // Optional: Update coordinates of existing pins instead of recreating
-                    return
-                }
 
                 mapView.removeAnnotations(existingAnnotations)
 

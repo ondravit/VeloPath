@@ -18,6 +18,7 @@ struct MapContainerView: View {
     @Binding var isPlacingWaypoint: Bool
     @Binding var insertionIndex: Int?
     @Binding var plannerOffset: CGFloat
+    @Binding var routeDistance: Double
     @State private var routeCoords: [CLLocationCoordinate2D] = []
     @State private var startCoord: CLLocationCoordinate2D?
     @State private var endCoord: CLLocationCoordinate2D?
@@ -39,7 +40,7 @@ struct MapContainerView: View {
         private var unknownToShow: [RoadSegment] {
             switch roadDisplayMode {
             case .none: return []
-            case .knownOnly: return []              // ← tady je ten rozdíl
+            case .knownOnly: return []
             case .all: return unknownRoads
             }
         }
@@ -58,7 +59,8 @@ struct MapContainerView: View {
                 knownRoads: knownToShow,
                 unknownRoads: unknownToShow,
                 userLocation: userLocation,
-                qualityBalance: $qualityBalance
+                qualityBalance: $qualityBalance,
+                routeDistance: $routeDistance
             )
             .edgesIgnoringSafeArea(.all)
         }

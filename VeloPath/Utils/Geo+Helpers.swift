@@ -32,3 +32,16 @@ extension CLLocationCoordinate2D {
         )
     }
 }
+
+extension Array where Element == CLLocationCoordinate2D {
+    func totalDistanceInMeters() -> Double {
+        guard self.count > 1 else { return 0 }
+        var total = 0.0
+        for i in 0..<self.count - 1 {
+            let start = CLLocation(latitude: self[i].latitude, longitude: self[i].longitude)
+            let end = CLLocation(latitude: self[i+1].latitude, longitude: self[i+1].longitude)
+            total += start.distance(from: end)
+        }
+        return total
+    }
+}

@@ -7,11 +7,20 @@
 
 import SwiftUI
 import Combine
+import CoreLocation
+
+// Check if two coordinates are equal
+extension CLLocationCoordinate2D: Equatable {
+    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+}
 
 final class AppCoordinator: ObservableObject {
     @Published var isLoading = true
     @Published var roads: [RoadSegment] = []
 
+    // Load roads data asynchronously
     func load() {
         DispatchQueue.global(qos: .userInitiated).async {
             let loaded = GeoJSONService.loadRoads(from: "Stav_povrchu_silnic")
@@ -34,6 +43,7 @@ struct ContentView: View {
     @State private var routePlan = RoutePlan()
     @State private var isPlacingWaypoint = false
     @State private var insertionIndex: Int? = nil
+    @State private var routeDistance: Double = 0.0
 
     var body: some View {
         Group {
@@ -48,12 +58,16 @@ struct ContentView: View {
         .onAppear { coordinator.load() }
         .animation(.easeInOut(duration: 0.5), value: coordinator.isLoading)
         .onChange(of: coordinator.isLoading) { oldValue, newValue in
-            // 🧭 Only trigger after splash has *finished fading out*
+            // Request location authorization after loading completes
             if oldValue == true && newValue == false {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     locationManager.requestAuthorization()
                 }
             }
+        }
+        // Recalculate route when waypoints change
+        .onChange(of: routePlan.points) { _, _ in
+            NotificationCenter.default.post(name: .recalculateRoute, object: nil)
         }
     }
     
@@ -67,7 +81,8 @@ struct ContentView: View {
                 routePlan: $routePlan,
                 isPlacingWaypoint: $isPlacingWaypoint,
                 insertionIndex: $insertionIndex,
-                plannerOffset: $plannerOffset
+                plannerOffset: $plannerOffset,
+                routeDistance: $routeDistance
             )
             .ignoresSafeArea()
 
@@ -78,11 +93,14 @@ struct ContentView: View {
                 Spacer()
                 // Hide the planner panel completely while placing a waypoint
                 if !isPlacingWaypoint {
-                    RoutePlannerPanel(offset: $plannerOffset,
-                                      routePlan: $routePlan,
-                                      isPlacingWaypoint: $isPlacingWaypoint,
-                                      insertionIndex: $insertionIndex,
-                                      qualityBalance: $qualityBalance)
+                    RoutePlannerPanel(
+                        offset: $plannerOffset,
+                        routePlan: $routePlan,
+                        isPlacingWaypoint: $isPlacingWaypoint,
+                        insertionIndex: $insertionIndex,
+                        qualityBalance: $qualityBalance,
+                        routeDistance: routeDistance
+                    )
                 }
             }
             .ignoresSafeArea(edges: .bottom)
@@ -92,14 +110,22 @@ struct ContentView: View {
                 let screen = UIScreen.main.bounds
 
                 VStack(spacing: 8) {
-                    // Pin-only marker: clear pointer using system symbol inside a white circle
-                    ZStack {
-                        Image(systemName: "mappin")
-                            .font(.system(size: 28))
-                            .foregroundColor(.red)
+                        // Pin-only marker
+                        ZStack {
+                            Circle()
+                                .fill(Color.black.opacity(0.5))
+                                .frame(width: 5, height: 5)
+                            
+                            Image(systemName: "mappin") // Nebo zkuste plnější "mappin.circle.fill"
+                                .font(.system(size: 34)) // Zvětšeno pro lepší manipulaci
+                                .foregroundColor(.red)
+                                // Klíčová úprava: Posun nahoru o cca polovinu velikosti
+                                // Protože font je 34, posun -17 zajistí, že špička sedí na středu
+                                .offset(y: -17)
+                                // Volitelné: Bílý stín pro lepší viditelnost na tmavé mapě
+                                .shadow(color: .white, radius: 1)
+                        }
                     }
-                }
-                .offset(x: 0, y: 0.05)
                 .allowsHitTesting(false)
                 .zIndex(1)
 
