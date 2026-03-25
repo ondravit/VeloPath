@@ -1,1 +1,4 @@
 VeloPath/Resources/*.geojson
+
+# Swift Package Manager build artifacts
+VeloGraphBuilder/.build/
