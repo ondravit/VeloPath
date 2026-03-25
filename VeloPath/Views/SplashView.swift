@@ -24,7 +24,7 @@ struct SplashView: View {
                     .font(.system(size: 34, weight: .bold))
                     .foregroundColor(Color(red: 52/255, green: 189/255, blue: 253/255))
                 
-                ProgressView("Načítám silnice…")
+                ProgressView("Připravuji mapu…")
                     .progressViewStyle(CircularProgressViewStyle(tint: .blue))
                     .padding(.top, 10)
             }

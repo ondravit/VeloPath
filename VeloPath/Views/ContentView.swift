@@ -4,7 +4,7 @@ import CoreLocation
 
 // MARK: - Coordinate equality (needed for onChange comparisons)
 
-extension CLLocationCoordinate2D: Equatable {
+extension CLLocationCoordinate2D: @retroactive Equatable {
     public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
         lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
     }
@@ -20,11 +20,9 @@ final class AppCoordinator: ObservableObject {
     func load() {
         Task {
             do {
-                // Hop to DatabaseService actor for each fetch (serialised on its DatabaseQueue).
                 let nodes = try await DatabaseService.shared.loadAllNodes()
                 let edges = try await DatabaseService.shared.loadAllEdges()
 
-                // Build ImmutableGraph (allocates large dicts + KDTree) off the main thread.
                 let builtGraph = await Task.detached(priority: .userInitiated) {
                     ImmutableGraph(nodes: nodes, edges: edges)
                 }.value
@@ -43,15 +41,22 @@ final class AppCoordinator: ObservableObject {
 struct ContentView: View {
     @StateObject private var coordinator     = AppCoordinator()
     @StateObject private var locationManager = LocationManager()
-    @State private var segments: [DBSegment]     = []
-    @State private var plannerOffset: CGFloat    = 305
-    @State private var showRoadsOverlay           = true
+
+    // Map state
+    @State private var segments: [DBSegment]  = []
     @State private var roadDisplayMode: RoadDisplayMode = .knownOnly
-    @State private var qualityBalance: Double    = 0.5
-    @State private var routePlan                 = RoutePlan()
-    @State private var isPlacingWaypoint         = false
-    @State private var insertionIndex: Int?      = nil
-    @State private var routeDistance: Double     = 0.0
+
+    // Route state
+    @State private var routePlan       = RoutePlan()
+    @State private var qualityBalance: Double = 0.5
+    @State private var routeDistance: Double  = 0.0
+
+    // Waypoint placement state
+    @State private var isPlacingWaypoint = false
+    @State private var insertionIndex: Int? = nil
+
+    // Bottom sheet state — starts collapsed
+    @State private var plannerDetent: PresentationDetent = RoutePlannerPanel.collapsedDetent
 
     var body: some View {
         Group {
@@ -81,41 +86,53 @@ struct ContentView: View {
 
     private var mainInterface: some View {
         ZStack {
+            // Edge-to-edge map
             MapContainerView(
-                segments:         $segments,
-                graph:            coordinator.graph,
-                roadDisplayMode:  roadDisplayMode,
-                userLocation:     locationManager.userLocation,
-                qualityBalance:   $qualityBalance,
-                routePlan:        $routePlan,
+                segments:          $segments,
+                graph:             coordinator.graph,
+                roadDisplayMode:   roadDisplayMode,
+                userLocation:      locationManager.userLocation,
+                qualityBalance:    $qualityBalance,
+                routePlan:         $routePlan,
                 isPlacingWaypoint: $isPlacingWaypoint,
-                insertionIndex:   $insertionIndex,
-                plannerOffset:    $plannerOffset,
-                routeDistance:    $routeDistance
+                insertionIndex:    $insertionIndex,
+                routeDistance:     $routeDistance
             )
             .ignoresSafeArea()
 
-            TopPanel()
+            // Floating side buttons (layers + location)
             SidePanel(roadDisplayMode: $roadDisplayMode)
 
-            VStack {
-                Spacer()
-                if !isPlacingWaypoint {
-                    RoutePlannerPanel(
-                        offset:           $plannerOffset,
-                        routePlan:        $routePlan,
-                        isPlacingWaypoint: $isPlacingWaypoint,
-                        insertionIndex:   $insertionIndex,
-                        qualityBalance:   $qualityBalance,
-                        routeDistance:    routeDistance
-                    )
-                }
-            }
-            .ignoresSafeArea(edges: .bottom)
-
+            // Crosshair overlay shown while the user is picking a waypoint position
             if isPlacingWaypoint {
                 placementOverlay
             }
+        }
+        // Non-dismissible bottom sheet with three snap positions
+        .sheet(isPresented: .constant(true)) {
+            RoutePlannerPanel(
+                routePlan:         $routePlan,
+                isPlacingWaypoint: $isPlacingWaypoint,
+                insertionIndex:    $insertionIndex,
+                qualityBalance:    $qualityBalance,
+                selectedDetent:    $plannerDetent,
+                routeDistance:     routeDistance,
+                userLocation:      locationManager.userLocation
+            )
+            .presentationDetents(
+                [RoutePlannerPanel.collapsedDetent, .medium, .large],
+                selection: $plannerDetent
+            )
+            .presentationDragIndicator(.visible)
+            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+            .presentationContentInteraction(.scrolls)
+            .presentationBackground { Rectangle().fill(.ultraThinMaterial).ignoresSafeArea() }
+            .presentationCornerRadius(20)
+            .interactiveDismissDisabled()
+        }
+        // Collapse the sheet whenever waypoint placement mode activates
+        .onChange(of: isPlacingWaypoint) { _, placing in
+            if placing { withAnimation { plannerDetent = RoutePlannerPanel.collapsedDetent } }
         }
     }
 
@@ -123,7 +140,7 @@ struct ContentView: View {
 
     private var placementOverlay: some View {
         ZStack {
-            // Crosshair pin
+            // Crosshair pin (non-interactive, centred on screen)
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
@@ -139,32 +156,35 @@ struct ContentView: View {
             .allowsHitTesting(false)
             .zIndex(1)
 
-            // Confirm / cancel buttons
+            // Confirm / cancel buttons above the home indicator
             VStack {
                 Spacer()
                 HStack(spacing: 12) {
                     Button {
                         NotificationCenter.default.post(name: .cancelPlacement, object: nil)
-                        insertionIndex   = nil
+                        insertionIndex    = nil
                         isPlacingWaypoint = false
                     } label: {
                         Text("Zrušit")
-                            .padding(.horizontal, 12).padding(.vertical, 8)
-                            .background(Color(.systemBackground).opacity(0.95))
-                            .cornerRadius(8).shadow(radius: 2)
+                            .padding(.horizontal, 16).padding(.vertical, 10)
+                            .background(.regularMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .shadow(radius: 2)
                     }
                     Button {
                         NotificationCenter.default.post(name: .confirmPlacement, object: nil)
                         isPlacingWaypoint = false
                     } label: {
-                        Text("OK")
-                            .padding(.horizontal, 16).padding(.vertical, 8)
+                        Text("Potvrdit")
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 20).padding(.vertical, 10)
                             .background(Color.blue)
                             .foregroundColor(.white)
-                            .cornerRadius(8).shadow(radius: 2)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .shadow(radius: 2)
                     }
                 }
-                .padding(.bottom, 34)
+                .padding(.bottom, 48)
                 .zIndex(2)
             }
         }

@@ -1,62 +1,47 @@
-//
-//  SidePanel.swift
-//  VeloPath
-//
-//  Created by Ondřej Vít on 12.10.2025.
-//
-
 import SwiftUI
 
 struct SidePanel: View {
     @Binding var roadDisplayMode: RoadDisplayMode
-    @State private var showInfo = false
 
     var body: some View {
-        // ⚙️ Floating action buttons
         VStack {
             HStack {
                 Spacer()
                 VStack(spacing: 12) {
-                    // Info button
-                    Button {
-                        showInfo.toggle()
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 18, weight: .medium))
-                            .padding(13)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                    .sheet(isPresented: $showInfo) {
-                        InfoView()
-                    }
-
-                    // Layers button
+                    // Layers button — cycles None → KnownOnly → All
                     Button {
                         cycleDisplayMode()
                     } label: {
                         Image(systemName: iconName(for: roadDisplayMode))
                             .font(.system(size: 18, weight: .medium))
+                            // Fixed frame prevents layout jitter when the icon switches
+                            // between symbols with different intrinsic widths.
+                            .frame(width: 24, height: 24)
                             .padding(13)
                             .background(.ultraThinMaterial, in: Circle())
                     }
 
-                    // Location button
+                    // Location button — recenters map to user position
                     Button {
                         NotificationCenter.default.post(name: .recenterMap, object: nil)
                     } label: {
                         Image(systemName: "location.fill")
                             .font(.system(size: 18, weight: .medium))
+                            .frame(width: 24, height: 24)
                             .padding(13)
                             .background(.ultraThinMaterial, in: Circle())
                     }
                 }
                 .padding(.trailing, 4)
-                .padding(.top, 60)
+                // Use safe-area-relative top padding instead of a hardcoded magic number.
+                .padding(.top, 12)
             }
             Spacer()
         }
     }
+
     // MARK: - Helpers
+
     private func cycleDisplayMode() {
         let next = (roadDisplayMode.rawValue + 1) % RoadDisplayMode.allCases.count
         roadDisplayMode = RoadDisplayMode(rawValue: next)!
@@ -64,103 +49,17 @@ struct SidePanel: View {
 
     private func iconName(for mode: RoadDisplayMode) -> String {
         switch mode {
-        case .none:
-            return "square.3.layers.3d"
-        case .knownOnly:
-            return "square.3.layers.3d.middle.filled"
-        case .all:
-            return "square.3.layers.3d.top.filled"
+        case .none:      return "map"           // no road overlays (iOS 13+)
+        case .knownOnly: return "road.lanes"    // quality roads only (iOS 17+)
+        case .all:       return "map.fill"      // all roads including unknown (iOS 13+)
         }
     }
 }
 
-private struct InfoView: View {
-    var body: some View {
-        NavigationStack {
-            GeometryReader { geo in
-                ScrollView {
-                    VStack(spacing: 16) {
-                        Image("VeloPath")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .shadow(radius: 10)
-                        
-
-                        Text("VeloPath")
-                            .font(.title.bold())
-
-                        Text("Cyklistická mapa kvality povrchu silnic.\nAplikace zobrazuje silnice podle jejich stavu povrchu, aby si cyklisté mohli plánovat bezpečnější a příjemnější trasy.")
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
-                            .padding(.bottom, 12)
-
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Nápověda")
-                                .font(.headline)
-                                .padding(.bottom, 4)
-
-                            LegendRow(color: Color(red: 0.0, green: 0.3, blue: 0.0), label: "Výborný")
-                            LegendRow(color: .green,  label: "Dobrý")
-                            LegendRow(color: .yellow, label: "Vyhovující")
-                            LegendRow(color: .orange, label: "Nevyhovující")
-                            LegendRow(color: .red,    label: "Havarijní")
-                            LegendRow(color: .purple, label: "Superhavarijní")
-                            LegendRow(color: .gray,   label: "Neznámý")
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-                        
-                        // Push footer to bottom when there's extra space
-                        Spacer(minLength: 0)
-
-                        // footer
-                        VStack {
-                            Divider()
-                                .padding(.vertical, 8)
-
-                            Text("© Ondřej Vít 2025")
-                                .font(.footnote)
-                                .foregroundColor(.secondary)
-                                .opacity(0.7)
-                        }
-                        .padding(.top, 12)
-                    }
-                    .padding()
-                    // Make the scroll content at least as tall as the visible area
-                    .frame(minHeight: geo.size.height, alignment: .top)
-                }
-            }
-            .navigationTitle("O aplikaci")
-            .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-}
-
-// MARK: - Legend Row
-
-private struct LegendRow: View {
-    let color: Color
-    let label: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Rectangle()
-                .fill(color)
-                .frame(width: 40, height: 6)
-                .cornerRadius(3)
-            Text(label)
-                .font(.subheadline)
-        }
-    }
-}
+// MARK: - Road display mode
 
 enum RoadDisplayMode: Int, CaseIterable {
-    case none        // nic se nevykreslí
-    case knownOnly   // pouze známé silnice
-    case all         // všechny (známé + neznámé)
+    case none       // nothing drawn
+    case knownOnly  // known condition roads only
+    case all        // known + unknown
 }
-

@@ -25,7 +25,8 @@ struct InteractiveMapView: UIViewRepresentable {
         mapView.showsUserLocation = true
         mapView.mapType = .standard
 
-        addRoadOverlays(to: mapView)
+        // Road overlays will be populated by the first regionDidChangeAnimated
+        // callback that fires after setRegion below.
 
         let tap = UITapGestureRecognizer(target: context.coordinator,
                                          action: #selector(Coordinator.mapTapped(_:)))
@@ -45,8 +46,11 @@ struct InteractiveMapView: UIViewRepresentable {
             context.coordinator.mapView = uiView
         }
 
-        uiView.removeOverlays(uiView.overlays.compactMap { $0 as? RoadsOverlay })
-        addRoadOverlays(to: uiView)
+        // Road overlays are expensive — only replace them when the segment
+        // data actually changes, not on every binding update (route, quality, etc.)
+        context.coordinator.updateRoadOverlays(on: uiView,
+                                               known: knownSegments,
+                                               unknown: unknownSegments)
 
         uiView.removeOverlays(uiView.overlays.filter { $0.title == "route" })
         if !routeCoords.isEmpty {
@@ -58,20 +62,16 @@ struct InteractiveMapView: UIViewRepresentable {
         context.coordinator.refreshAnnotations(on: uiView)
     }
 
-    private func addRoadOverlays(to mapView: MKMapView) {
-        if !unknownSegments.isEmpty {
-            mapView.addOverlay(RoadsOverlay(segments: unknownSegments), level: .aboveRoads)
-        }
-        if !knownSegments.isEmpty {
-            mapView.addOverlay(RoadsOverlay(segments: knownSegments), level: .aboveRoads)
-        }
-    }
-
     // MARK: - Coordinator
 
     class Coordinator: NSObject, MKMapViewDelegate {
         var parent: InteractiveMapView
         weak var mapView: MKMapView?
+
+        // Track last-rendered segment counts so road overlays are only
+        // replaced when the actual data changes, not on every binding update.
+        private var lastKnownCount   = -1
+        private var lastUnknownCount = -1
 
         init(_ parent: InteractiveMapView) {
             self.parent = parent
@@ -202,6 +202,25 @@ struct InteractiveMapView: UIViewRepresentable {
                     return a
                 }
                 mapView.addAnnotations(annotations)
+            }
+        }
+
+        // MARK: Road overlay management
+
+        func updateRoadOverlays(on mapView: MKMapView,
+                                 known: [DBSegment],
+                                 unknown: [DBSegment]) {
+            guard known.count != lastKnownCount || unknown.count != lastUnknownCount else { return }
+            lastKnownCount   = known.count
+            lastUnknownCount = unknown.count
+
+            mapView.removeOverlays(mapView.overlays.compactMap { $0 as? RoadsOverlay })
+            // Unknown (gray) drawn first so known quality segments render on top.
+            if !unknown.isEmpty {
+                mapView.addOverlay(RoadsOverlay(segments: unknown), level: .aboveRoads)
+            }
+            if !known.isEmpty {
+                mapView.addOverlay(RoadsOverlay(segments: known), level: .aboveRoads)
             }
         }
 

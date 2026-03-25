@@ -1,85 +1,61 @@
-//
-//  RoutePlannerPanel.swift
-//  VeloPath
-//
-//  Created by Ondřej Vít on 11.10.2025.
-//
-
 import SwiftUI
 import CoreLocation
 
 struct RoutePlannerPanel: View {
-    
-    // MARK: - Bindings
-    @Binding var offset: CGFloat
-    @GestureState private var dragOffset: CGFloat = 0
+
+    // MARK: - Bindings & input
 
     @Binding var routePlan: RoutePlan
     @Binding var isPlacingWaypoint: Bool
     @Binding var insertionIndex: Int?
     @Binding var qualityBalance: Double
+    @Binding var selectedDetent: PresentationDetent
     let routeDistance: Double
+    let userLocation: CLLocationCoordinate2D?   // for "Use current location"
 
-    // MARK: - Configuration: Panel Sizing
-    
-    // Fixed height based on screen percentage to ensure consistency between empty/populated states
-    private let panelHeight: CGFloat = UIScreen.main.bounds.height * 0.60
-    
-    // The amount of the panel visible when collapsed (Handle + Title)
-    private let handlePeek: CGFloat = 120
-    
-    // Calculated offset for the closed state
-    private var closedOffset: CGFloat { panelHeight - handlePeek }
+    // MARK: - Local state
+
+    @State private var showAbout = false
+    @State private var recalcTask: Task<Void, Never>? = nil
+
+    /// The collapsed / peek detent — referenced by ContentView.
+    static let collapsedDetent = PresentationDetent.height(100)
 
     // MARK: - Body
+    //
+    // Layout at each detent (approximate, iPhone 15):
+    //   collapsed  100 pt  → drag-indicator + vertically centred header + distance
+    //   medium    ~426 pt  → header + distance + constrained waypoint list (≤160 pt) + slider
+    //   large      full    → header + distance + unconstrained waypoint list + slider
+    //
     var body: some View {
-        let totalOffset = offset + dragOffset
-
         VStack(spacing: 0) {
-            
-            // 1. Drag Handle
-            // Increased touch area with transparent background for easier interaction
-            VStack {
-                Capsule()
-                    .fill(Color.secondary.opacity(0.4))
-                    .frame(width: 40, height: 5)
-                    .padding(.vertical, 10)
-            }
-            .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                    togglePanel()
-                }
-            }
 
-            // 2. Panel Content
-            VStack(spacing: 0) {
-                Text("Plánovač trasy")
-                    .font(.headline)
-                    .padding(.top, 10)
-                    .padding(.bottom, 5)
-                
-                if routeDistance > 0 {
-                    Text(formatDistance(routeDistance))
-                        .font(.system(size: 26, weight: .bold))
-                        .foregroundColor(.primary)
-                        .padding(.bottom, 15)
+            if selectedDetent == Self.collapsedDetent {
+
+                // ── Collapsed: centre the two always-visible rows vertically ──
+                Spacer(minLength: 0)
+                headerRow
+                distanceRow
+                Spacer(minLength: 0)
+
+            } else {
+
+                // ── Medium / Large ─────────────────────────────────────────
+                headerRow
+                distanceRow
+                Divider()
+
+                if routePlan.points.isEmpty {
+                    emptyStateView
                 } else {
-                    Color.clear.frame(height: 10).padding(.bottom, 10)
-                }
-
-                ZStack {
-                    if routePlan.points.isEmpty {
-                        emptyStateView
-                    } else {
-                        // Timeline Style List
-                        List {
+                    ScrollView {
+                        VStack(spacing: 0) {
                             ForEach(0..<routePlan.points.count, id: \.self) { i in
                                 TimelineRow(
-                                    index: i,
-                                    totalCount: routePlan.points.count,
-                                    coord: routePlan.points[i],
+                                    index:        i,
+                                    totalCount:   routePlan.points.count,
+                                    coord:        routePlan.points[i],
                                     onDelete: {
                                         withAnimation {
                                             if routePlan.points.indices.contains(i) {
@@ -88,284 +64,330 @@ struct RoutePlannerPanel: View {
                                         }
                                     },
                                     onInsertAfter: {
-                                        insertionIndex = i + 1
+                                        insertionIndex    = i + 1
                                         isPlacingWaypoint = true
+                                    },
+                                    onInsertCurrentLocationAfter: userLocation.map { loc in
+                                        {
+                                            withAnimation {
+                                                routePlan.points.insert(loc, at: i + 1)
+                                            }
+                                        }
                                     }
                                 )
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                             }
-                            .onMove { indices, newOffset in
-                                routePlan.points.move(fromOffsets: indices, toOffset: newOffset)
-                            }
-                            
                             appendButton
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 10, trailing: 16))
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 6)
                         }
-                        .listStyle(.plain)
-                        // Fixed height for the list area to allow space for bottom controls
-                        .frame(height: 240)
                     }
+                    // Medium: cap so the slider stays on-screen.
+                    // Large: expand to fill all space above the slider.
+                    .frame(maxHeight: selectedDetent == .medium ? 160 : .infinity)
+                    .layoutPriority(1)
                 }
-                .frame(maxHeight: .infinity)
 
-                // Separator
                 Divider()
-                    .padding(.top, 8)
-
-                // Slider Section
                 qualitySliderSection
-                    .padding()
-
-                // Separator
-                Divider()
-
-                // Bottom Action Buttons
-                bottomButtons
                     .padding(.horizontal)
-                    .padding(.top, 12)
-                    .padding(.bottom, 30) // Lifted up from the bottom edge
+                    .padding(.top, 10)
+                    // Extra bottom padding in .large so the label clears the home indicator.
+                    .padding(.bottom, selectedDetent == .large ? 24 : 10)
+            }
+
+            // Always-present spacer ensures the VStack fills the full sheet height,
+            // eliminating any transparent gap at the bottom edge.
+            if selectedDetent != .large {
+                Spacer(minLength: 0)
             }
         }
-        // Apply fixed dimensions to the entire panel container
-        .frame(maxWidth: .infinity)
-        .frame(height: panelHeight)
+        // Cover the home-indicator region with the sheet's own background.
         .background(.ultraThinMaterial)
-        .cornerRadius(20)
-        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: -2)
-        .offset(y: max(0, min(totalOffset, closedOffset)))
-        .gesture(
-            DragGesture()
-                .updating($dragOffset) { value, state, _ in
-                    state = value.translation.height
-                }
-                .onEnded { value in
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                        endDrag(value: value.translation.height)
-                    }
-                }
-        )
-        .onAppear {
-            // Set initial position to closed
-            if offset == 0 { offset = closedOffset }
+        .ignoresSafeArea()
+        .onChange(of: routePlan.points.count) { oldCount, newCount in
+            if oldCount == 0, newCount > 0, selectedDetent == Self.collapsedDetent {
+                withAnimation { selectedDetent = .medium }
+            }
+        }
+        .sheet(isPresented: $showAbout) {
+            AboutView()
         }
     }
 
-    // MARK: - Subviews & Components
-    
-    // View shown when no points are selected
+    // MARK: - Header row
+
+    private var headerRow: some View {
+        HStack(spacing: 16) {
+            Text("Plánovač trasy")
+                .font(.headline)
+            Spacer()
+            Button {
+                NotificationCenter.default.post(name: .exportGPX, object: nil)
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .imageScale(.large)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            Button { showAbout = true } label: {
+                Image(systemName: "info.circle")
+                    .imageScale(.large)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal)
+        .padding(.top, 6)
+        .padding(.bottom, 6)
+    }
+
+    // MARK: - Distance / hint row
+
+    private var distanceRow: some View {
+        Group {
+            if routeDistance > 0 {
+                Text(formatDistance(routeDistance))
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .contentTransition(.numericText())
+            } else {
+                Label("Klepněte na mapu a přidejte trasu", systemImage: "hand.tap")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal)
+        .padding(.bottom, selectedDetent == Self.collapsedDetent ? 0 : 10)
+        .animation(.default, value: routeDistance)
+    }
+
+    // MARK: - Empty state
+
     private var emptyStateView: some View {
         VStack(spacing: 12) {
-            Image(systemName: "map.fill")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary.opacity(0.5))
-            Text("Klepněte na mapu pro přidání\nstartu a cíle")
+            Image(systemName: "map")
+                .font(.system(size: 36))
+                .foregroundStyle(.secondary.opacity(0.5))
+            Text("Přidejte start a cíl klepnutím na mapu")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(.vertical, 28)
     }
-    
-    // Component: Single Row in the Timeline List
-    struct TimelineRow: View {
-        let index: Int
-        let totalCount: Int
-        let coord: CLLocationCoordinate2D
-        let onDelete: () -> Void
-        let onInsertAfter: () -> Void
-        
-        var isLast: Bool { index == totalCount - 1 }
-        
-        var body: some View {
-            HStack(alignment: .top, spacing: 12) {
-                // Left Column: Timeline Visuals (Line + Dot)
-                VStack(spacing: 0) {
-                    // Top line connector
-                    Rectangle()
-                        .fill(index == 0 ? Color.clear : Color.gray.opacity(0.3))
-                        .frame(width: 2, height: 12)
-                    
-                    // Waypoint Dot
-                    Circle()
-                        .fill(index == 0 ? Color.green : (isLast ? Color.red : Color.blue))
-                        .frame(width: 14, height: 14)
-                        .background(Circle().stroke(Color.white, lineWidth: 2))
-                    
-                    // Bottom line connector with "Insert" button
-                    if !isLast {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(width: 2)
-                            
-                            // Small Plus Button on the line
-                            Button(action: onInsertAfter) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .frame(width: 18, height: 18)
-                                    .background(Color.blue)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.top, 10)
-                        }
-                        .frame(maxHeight: .infinity)
-                        .frame(minHeight: 30)
-                    } else {
-                        Spacer().frame(height: 12)
-                    }
-                }
-                .frame(width: 20)
-                
-                // Right Column: Content (Text + Delete)
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(pointTitle(for: index, total: totalCount))
-                                .font(.system(size: 15, weight: .medium))
-                            Text(String(format: "%.5f, %.5f", coord.latitude, coord.longitude))
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        // Drag Handle Icon
-                        Image(systemName: "line.3.horizontal")
-                            .foregroundColor(.secondary.opacity(0.4))
-                        
-                        // Delete Button
-                        Button(action: onDelete) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.secondary)
-                                .padding(6)
-                                .background(Color.gray.opacity(0.1))
-                                .clipShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(10)
-                    .background(Color(.systemBackground).opacity(0.6))
-                    .cornerRadius(10)
-                    .padding(.bottom, isLast ? 0 : 4)
-                }
-            }
-        }
-        
-        // Helper to determine the title of the point based on index
-        private func pointTitle(for index: Int, total: Int) -> String {
-            if index == 0 { return "Start" }
-            if index == total - 1 { return "Cíl" }
-            return "Průjezdní bod \(index)"
-        }
-    }
-    
-    // Component: Button to append a new waypoint at the end
+
+    // MARK: - Append button
+
     private var appendButton: some View {
         HStack {
-            // Visual alignment line
             Rectangle()
                 .fill(Color.gray.opacity(0.3))
                 .frame(width: 2, height: 20)
                 .padding(.leading, 9)
                 .padding(.trailing, 21)
-            
-            Button(action: {
-                insertionIndex = routePlan.points.count
-                isPlacingWaypoint = true
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(.blue)
-                    Text("Přidat zastávku")
-                        .fontWeight(.medium)
+
+            if let loc = userLocation {
+                // Show a Menu so the user can choose between map placement or current location.
+                Menu {
+                    Button {
+                        insertionIndex    = routePlan.points.count
+                        isPlacingWaypoint = true
+                    } label: {
+                        Label("Vybrat na mapě", systemImage: "map")
+                    }
+                    Button {
+                        withAnimation {
+                            routePlan.points.append(loc)
+                        }
+                    } label: {
+                        Label("Použít aktuální polohu", systemImage: "location.fill")
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(.blue)
+                        Text("Přidat zastávku")
+                            .fontWeight(.medium)
+                    }
+                    .font(.subheadline)
                 }
-                .font(.subheadline)
+                .buttonStyle(.plain)
+            } else {
+                Button {
+                    insertionIndex    = routePlan.points.count
+                    isPlacingWaypoint = true
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(.blue)
+                        Text("Přidat zastávku")
+                            .fontWeight(.medium)
+                    }
+                    .font(.subheadline)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            
+
             Spacer()
         }
         .padding(.top, -8)
     }
-    
-    // Component: Quality/Distance Slider
+
+    // MARK: - Quality slider
+
     private var qualitySliderSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Nejkratší")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Text("Nejkvalitnější")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
-
             Slider(value: $qualityBalance, in: 0...1)
                 .tint(.blue)
-
+                .onChange(of: qualityBalance) { _, _ in
+                    recalcTask?.cancel()
+                    recalcTask = Task {
+                        try? await Task.sleep(for: .milliseconds(150))
+                        guard !Task.isCancelled else { return }
+                        NotificationCenter.default.post(name: .recalculateRoute, object: nil)
+                    }
+                }
             Text("Poměr: \(Int(qualityBalance * 100)) % kvalita")
                 .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-    }
-    
-    // Component: Bottom Action Buttons
-    private var bottomButtons: some View {
-        HStack(spacing: 12) {
-            Button {
-                NotificationCenter.default.post(name: .recalculateRoute, object: nil)
-            } label: {
-                Label("Přepočítat trasu", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(routePlan.hasAtLeastStartAndEnd ? Color.blue : Color.gray.opacity(0.3))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
-            .disabled(!routePlan.hasAtLeastStartAndEnd)
-            
-            Button {
-                NotificationCenter.default.post(name: .exportGPX, object: nil)
-            } label: {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.headline)
-                    .padding()
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(12)
-            }
+                .foregroundStyle(.secondary)
         }
     }
 
-    // MARK: - Helpers & Logic
-    
-    private func togglePanel() {
-        offset = offset == 0 ? closedOffset : 0
-    }
+    // MARK: - Helpers
 
-    private func endDrag(value: CGFloat) {
-        if value > 100 {
-            offset = closedOffset
-        } else if value < -100 {
-            offset = 0
-        } else {
-            let proposed = offset + value
-            offset = proposed > (closedOffset / 2) ? closedOffset : 0
-        }
-    }
     private func formatDistance(_ meters: Double) -> String {
-        if meters >= 1000 {
-            return String(format: "%.1f km", meters / 1000)
-        } else {
-            return String(format: "%.0f m", meters)
+        meters >= 1000
+            ? String(format: "%.1f km", meters / 1000)
+            : String(format: "%.0f m", meters)
+    }
+}
+
+// MARK: - Timeline row
+
+struct TimelineRow: View {
+    let index: Int
+    let totalCount: Int
+    let coord: CLLocationCoordinate2D
+    let onDelete: () -> Void
+    let onInsertAfter: () -> Void
+    /// Non-nil when the device has a known location — shows a Menu instead of a plain button.
+    let onInsertCurrentLocationAfter: (() -> Void)?
+
+    var isLast: Bool { index == totalCount - 1 }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Timeline track
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(index == 0 ? Color.clear : Color.gray.opacity(0.3))
+                    .frame(width: 2, height: 12)
+
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: 14, height: 14)
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
+
+                if !isLast {
+                    ZStack {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 2)
+                        insertButton
+                    }
+                    .frame(maxHeight: .infinity)
+                    .frame(minHeight: 30)
+                } else {
+                    Spacer().frame(height: 12)
+                }
+            }
+            .frame(width: 20)
+
+            // Waypoint card
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(pointTitle(for: index, total: totalCount))
+                        .font(.system(size: 15, weight: .medium))
+                    Text(String(format: "%.5f, %.5f", coord.latitude, coord.longitude))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "line.3.horizontal")
+                    .foregroundStyle(.secondary.opacity(0.4))
+                Button(action: onDelete) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .padding(6)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(10)
+            .background(Color(.systemBackground).opacity(0.6))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .padding(.bottom, isLast ? 0 : 4)
         }
+        .padding(.horizontal, 16)
+    }
+
+    /// The inter-waypoint "+" insert button — plain or Menu depending on location availability.
+    @ViewBuilder
+    private var insertButton: some View {
+        if let insertWithLocation = onInsertCurrentLocationAfter {
+            Menu {
+                Button(action: onInsertAfter) {
+                    Label("Vybrat na mapě", systemImage: "map")
+                }
+                Button(action: insertWithLocation) {
+                    Label("Použít aktuální polohu", systemImage: "location.fill")
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 18, height: 18)
+                    .background(Color.blue)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 10)
+        } else {
+            Button(action: onInsertAfter) {
+                Image(systemName: "plus")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 18, height: 18)
+                    .background(Color.blue)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 10)
+        }
+    }
+
+    private var dotColor: Color {
+        index == 0 ? .green : (isLast ? .red : .blue)
+    }
+
+    private func pointTitle(for index: Int, total: Int) -> String {
+        if index == 0 { return "Start" }
+        if index == total - 1 { return "Cíl" }
+        return "Průjezdní bod \(index)"
     }
 }

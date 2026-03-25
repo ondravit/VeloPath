@@ -9,7 +9,6 @@ import SwiftUI
 
 struct TopPanel: View {
     var body: some View {
-        // 🧭 Top bar (logo + menu)
         VStack {
             HStack {
                 HStack(spacing: 8) {
@@ -17,11 +16,14 @@ struct TopPanel: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 25, height: 25)
-                        .shadow(radius: 10)
                     Text("VeloPath")
                         .font(.title2.bold())
                         .foregroundColor(Color(red: 52/255, green: 189/255, blue: 253/255))
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+
                 Spacer()
             }
             .padding(.horizontal)

@@ -11,7 +11,6 @@ struct MapContainerView: View {
     @Binding var routePlan: RoutePlan
     @Binding var isPlacingWaypoint: Bool
     @Binding var insertionIndex: Int?
-    @Binding var plannerOffset: CGFloat
     @Binding var routeDistance: Double
     @State private var routeCoords: [CLLocationCoordinate2D] = []
     @State private var startCoord: CLLocationCoordinate2D?
