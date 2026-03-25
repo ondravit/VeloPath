@@ -1,16 +1,10 @@
-//
-//  MapContainerView.swift
-//  VeloPath
-//
-//  Created by Ondřej Vít on 07.10.2025.
-//
-
 import SwiftUI
 import MapKit
 import CoreLocation
 
 struct MapContainerView: View {
-    let roads: [RoadSegment]
+    @Binding var segments: [DBSegment]
+    let graph: ImmutableGraph?
     let roadDisplayMode: RoadDisplayMode
     var userLocation: CLLocationCoordinate2D?
     @Binding var qualityBalance: Double
@@ -22,47 +16,44 @@ struct MapContainerView: View {
     @State private var routeCoords: [CLLocationCoordinate2D] = []
     @State private var startCoord: CLLocationCoordinate2D?
     @State private var endCoord: CLLocationCoordinate2D?
-    
-    private var knownRoads: [RoadSegment] {
-        roads.filter { $0.condition != .unknown }
-    }
-    private var unknownRoads: [RoadSegment] {
-        roads.filter { $0.condition == .unknown }
-    }
-    
-    private var knownToShow: [RoadSegment] {
-            switch roadDisplayMode {
-            case .none: return []
-            case .knownOnly: return knownRoads
-            case .all: return knownRoads
-            }
+
+    // MARK: - Filtering
+
+    private var knownSegments: [DBSegment]   { segments.filter { $0.condition != 6 } }
+    private var unknownSegments: [DBSegment] { segments.filter { $0.condition == 6 } }
+
+    private var knownToShow: [DBSegment] {
+        switch roadDisplayMode {
+        case .none:      return []
+        case .knownOnly: return knownSegments
+        case .all:       return knownSegments
         }
-        private var unknownToShow: [RoadSegment] {
-            switch roadDisplayMode {
-            case .none: return []
-            case .knownOnly: return []
-            case .all: return unknownRoads
-            }
+    }
+    private var unknownToShow: [DBSegment] {
+        switch roadDisplayMode {
+        case .none, .knownOnly: return []
+        case .all:              return unknownSegments
         }
-    
-   
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        ZStack {
-            InteractiveMapView(
-                routeCoords: $routeCoords,
-                routePlan: $routePlan,
-                startCoord: $startCoord,
-                endCoord: $endCoord,
-                isPlacingWaypoint: $isPlacingWaypoint,
-                insertionIndex: $insertionIndex,
-                allRoads: roads,
-                knownRoads: knownToShow,
-                unknownRoads: unknownToShow,
-                userLocation: userLocation,
-                qualityBalance: $qualityBalance,
-                routeDistance: $routeDistance
-            )
-            .edgesIgnoringSafeArea(.all)
-        }
+        InteractiveMapView(
+            segments:         $segments,
+            routeCoords:      $routeCoords,
+            routePlan:        $routePlan,
+            startCoord:       $startCoord,
+            endCoord:         $endCoord,
+            isPlacingWaypoint: $isPlacingWaypoint,
+            insertionIndex:   $insertionIndex,
+            graph:            graph,
+            knownSegments:    knownToShow,
+            unknownSegments:  unknownToShow,
+            userLocation:     userLocation,
+            qualityBalance:   $qualityBalance,
+            routeDistance:    $routeDistance
+        )
+        .edgesIgnoringSafeArea(.all)
     }
 }

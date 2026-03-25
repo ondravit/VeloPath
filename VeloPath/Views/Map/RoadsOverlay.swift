@@ -1,52 +1,48 @@
-//
-//  RoadsOverlay.swift
-//  VeloPath
-//
-//  Created by Ondřej Vít on 10.10.2025.
-//
-
 import MapKit
 import UIKit
 
-// A lightweight overlay that just tells MapKit its visible region
+// MARK: - Overlay
+
 final class RoadsOverlay: NSObject, MKOverlay {
     var coordinate: CLLocationCoordinate2D
     var boundingMapRect: MKMapRect
-    let roads: [RoadSegment]
+    let segments: [DBSegment]
 
-    init(roads: [RoadSegment]) {
-        self.roads = roads
+    init(segments: [DBSegment]) {
+        self.segments = segments
 
-        // Compute overall bounding box
-        var minLat = 90.0, maxLat = -90.0
+        var minLat = 90.0,  maxLat = -90.0
         var minLon = 180.0, maxLon = -180.0
-        for r in roads {
-            for c in r.coordinates {
-                minLat = min(minLat, c.latitude)
-                maxLat = max(maxLat, c.latitude)
-                minLon = min(minLon, c.longitude)
-                maxLon = max(maxLon, c.longitude)
+        for s in segments {
+            for c in s.coords {
+                if c.latitude  < minLat { minLat = c.latitude  }
+                if c.latitude  > maxLat { maxLat = c.latitude  }
+                if c.longitude < minLon { minLon = c.longitude }
+                if c.longitude > maxLon { maxLon = c.longitude }
             }
         }
-        let topLeft = MKMapPoint(CLLocationCoordinate2D(latitude: maxLat, longitude: minLon))
+        // Guard against empty input
+        if minLat > maxLat { minLat = 0; maxLat = 0; minLon = 0; maxLon = 0 }
+
+        let topLeft     = MKMapPoint(CLLocationCoordinate2D(latitude: maxLat, longitude: minLon))
         let bottomRight = MKMapPoint(CLLocationCoordinate2D(latitude: minLat, longitude: maxLon))
         boundingMapRect = MKMapRect(
             origin: MKMapPoint(x: topLeft.x, y: topLeft.y),
-            size: MKMapSize(width: fabs(bottomRight.x - topLeft.x),
-                            height: fabs(bottomRight.y - topLeft.y))
+            size:   MKMapSize(width:  abs(bottomRight.x - topLeft.x),
+                              height: abs(bottomRight.y - topLeft.y))
         )
-        coordinate = CLLocationCoordinate2D(latitude: (minLat + maxLat)/2,
-                                            longitude: (minLon + maxLon)/2)
+        coordinate = CLLocationCoordinate2D(latitude:  (minLat + maxLat) / 2,
+                                            longitude: (minLon + maxLon) / 2)
     }
 }
 
+// MARK: - Renderer
 
-/// Custom renderer that draws all roads in one CoreGraphics pass
 final class RoadsOverlayRenderer: MKOverlayRenderer {
-    let roads: [RoadSegment]
+    private let segments: [DBSegment]
 
     init(overlay: RoadsOverlay) {
-        self.roads = overlay.roads
+        self.segments = overlay.segments
         super.init(overlay: overlay)
     }
 
@@ -54,35 +50,32 @@ final class RoadsOverlayRenderer: MKOverlayRenderer {
         context.setLineJoin(.round)
         context.setLineCap(.round)
 
-        for road in roads {
-            guard road.coordinates.count > 1 else { continue }
+        for seg in segments {
+            guard seg.coords.count > 1 else { continue }
 
             let path = CGMutablePath()
-            let first = MKMapPoint(road.coordinates[0])
-            let startPoint = point(for: first)
-            path.move(to: startPoint)
-
-            for coord in road.coordinates.dropFirst() {
-                let point = point(for: MKMapPoint(coord))
-                path.addLine(to: point)
+            path.move(to: point(for: MKMapPoint(seg.coords[0])))
+            for coord in seg.coords.dropFirst() {
+                path.addLine(to: point(for: MKMapPoint(coord)))
             }
 
             context.addPath(path)
-            context.setStrokeColor(RoadsOverlayRenderer.color(for: road.condition).cgColor)
+            context.setStrokeColor(RoadsOverlayRenderer.color(for: seg.condition).cgColor)
             context.setLineWidth(2.5 / zoomScale)
             context.strokePath()
         }
     }
 
-    static func color(for condition: RoadSegment.RoadCondition) -> UIColor {
+    /// Condition integer encoding matches VeloGraphBuilder's SQLiteWriter (0–6).
+    static func color(for condition: Int) -> UIColor {
         switch condition {
-        case .excellent: return .systemGreen
-        case .good: return .green
-        case .satisfactory: return .yellow
-        case .unsatisfactory: return .orange
-        case .emergency: return .red
-        case .superemergency: return .purple
-        case .unknown: return .gray
+        case 0:  return UIColor(red: 0.0, green: 0.3, blue: 0.0, alpha: 1)  // excellent
+        case 1:  return .systemGreen    // good
+        case 2:  return .systemYellow   // satisfactory
+        case 3:  return .systemOrange   // unsatisfactory
+        case 4:  return .systemRed      // emergency
+        case 5:  return .systemPurple   // superemergency
+        default: return .systemGray     // unknown
         }
     }
 }

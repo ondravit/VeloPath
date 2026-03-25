@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6F6921802E96F4730050FD8E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6F69217F2E96F4730050FD8E /* LaunchScreen.storyboard */; };
+		6F7862312F74487400ED741E /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 6F7862302F74487400ED741E /* GRDB */; };
 		6FFD67A92EC27E7E00BADF35 /* CoreGPX in Frameworks */ = {isa = PBXBuildFile; productRef = 6FFD67A82EC27E7E00BADF35 /* CoreGPX */; };
 /* End PBXBuildFile section */
 
@@ -17,10 +18,12 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		6F6921552E96E4CE0050FD8E /* Exceptions for "VeloPath" folder in "VeloPath" target */ = {
+		6FB2413D2F746B0B0044AD26 /* Exceptions for "VeloPath" folder in "VeloPath" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Algorithms/Dijkstra.swift,
+				Resources/Silnice_KHK_all_merged.geojson,
+				"Resources/VeloGraph.sqlite-shm",
+				"Resources/VeloGraph.sqlite-wal",
 			);
 			target = 6FDE69B72E9584CE00A846D7 /* VeloPath */;
 		};
@@ -30,7 +33,7 @@
 		6FDE69BA2E9584CE00A846D7 /* VeloPath */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				6F6921552E96E4CE0050FD8E /* Exceptions for "VeloPath" folder in "VeloPath" target */,
+				6FB2413D2F746B0B0044AD26 /* Exceptions for "VeloPath" folder in "VeloPath" target */,
 			);
 			path = VeloPath;
 			sourceTree = "<group>";
@@ -43,6 +46,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FFD67A92EC27E7E00BADF35 /* CoreGPX in Frameworks */,
+				6F7862312F74487400ED741E /* GRDB in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,6 +91,7 @@
 			name = VeloPath;
 			packageProductDependencies = (
 				6FFD67A82EC27E7E00BADF35 /* CoreGPX */,
+				6F7862302F74487400ED741E /* GRDB */,
 			);
 			productName = RoadNavigationDemo;
 			productReference = 6FDE69B82E9584CE00A846D7 /* VeloPath.app */;
@@ -118,6 +123,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				6FFD67A72EC27E7E00BADF35 /* XCRemoteSwiftPackageReference "CoreGPX" */,
+				6F78622F2F74487400ED741E /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6FDE69B92E9584CE00A846D7 /* Products */;
@@ -368,6 +374,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		6F78622F2F74487400ED741E /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.0;
+			};
+		};
 		6FFD67A72EC27E7E00BADF35 /* XCRemoteSwiftPackageReference "CoreGPX" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/vincentneo/CoreGPX.git";
@@ -379,6 +393,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		6F7862302F74487400ED741E /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6F78622F2F74487400ED741E /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = GRDB;
+		};
 		6FFD67A82EC27E7E00BADF35 /* CoreGPX */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6FFD67A72EC27E7E00BADF35 /* XCRemoteSwiftPackageReference "CoreGPX" */;

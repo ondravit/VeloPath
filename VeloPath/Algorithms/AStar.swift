@@ -1,65 +1,75 @@
-//
-//  AStar.swift
-//  VeloPath
-//
-//  Created by Ondřej Vít on 08.10.2025.
-//
-
-import Foundation
 import CoreLocation
 
-/// A* search for shortest path on RoadGraph
+/// A* search on ImmutableGraph using Int64 node IDs.
 enum AStar {
+
     static func findPath(
-        in graph: RoadGraph,
-        from start: GraphNode,
-        to goal: GraphNode
-    ) -> [GraphNode] {
+        in graph: ImmutableGraph,
+        from startID: Int64,
+        to goalID: Int64,
+        quality: Double
+    ) -> [Int64] {
+        guard let startNode = graph.node(startID),
+              let goalNode  = graph.node(goalID) else { return [] }
 
-        // Min-heap by fScore
-        var open = PriorityQueue<OpenItem>(sort: { $0.f < $1.f })
-        var cameFrom: [GraphNode: GraphNode] = [:]
+        var open     = PriorityQueue<OpenItem>(sort: { $0.f < $1.f })
+        var cameFrom = [Int64: Int64]()
+        var gScore   = [Int64: Double]()
 
-        var gScore: [GraphNode: Double] = [start: 0]
-        var fScore: [GraphNode: Double] = [start: h(start, goal)]
+        gScore[startID] = 0
+        open.push(OpenItem(id: startID, f: heuristic(startNode, goalNode)))
+        var inOpen: Set<Int64> = [startID]
 
-        open.push(OpenItem(node: start, f: fScore[start]!))
+        while let current = open.pop() {
+            inOpen.remove(current.id)
 
-        var inOpen: Set<GraphNode> = [start]
-
-        while let current = open.pop()?.node {
-            inOpen.remove(current)
-
-            if current == goal {
-                return reconstructPath(cameFrom: cameFrom, current: current)
+            if current.id == goalID {
+                return reconstructPath(cameFrom: cameFrom, end: goalID)
             }
 
-            for edge in graph.neighbors(of: current) {
-                let tentative = (gScore[current] ?? .infinity) + edge.cost
-                if tentative < (gScore[edge.to] ?? .infinity) {
-                    cameFrom[edge.to] = current
-                    gScore[edge.to] = tentative
-                    let f = tentative + h(edge.to, goal)
-                    fScore[edge.to] = f
-                    if !inOpen.contains(edge.to) {
-                        open.push(OpenItem(node: edge.to, f: f))
-                        inOpen.insert(edge.to)
+            let gCurrent = gScore[current.id] ?? .infinity
+
+            for edge in graph.neighbors(of: current.id) {
+                let cost      = blendedCost(edge: edge, quality: quality)
+                let tentative = gCurrent + cost
+
+                if tentative < (gScore[edge.toNode] ?? .infinity) {
+                    cameFrom[edge.toNode] = current.id
+                    gScore[edge.toNode]   = tentative
+                    if let toNode = graph.node(edge.toNode) {
+                        let f = tentative + heuristic(toNode, goalNode)
+                        if !inOpen.contains(edge.toNode) {
+                            open.push(OpenItem(id: edge.toNode, f: f))
+                            inOpen.insert(edge.toNode)
+                        }
                     }
                 }
             }
         }
-
-        return [] // no path
+        return []
     }
 
-    private static func h(_ a: GraphNode, _ b: GraphNode) -> Double {
-        // straight-line distance as an admissible heuristic (meters)
+    // MARK: - Helpers
+
+    /// Haversine straight-line distance (metres) — admissible heuristic.
+    private static func heuristic(_ a: DBNode, _ b: DBNode) -> Double {
         a.coordinate.distance(to: b.coordinate)
     }
 
-    private static func reconstructPath(cameFrom: [GraphNode: GraphNode], current: GraphNode) -> [GraphNode] {
-        var path: [GraphNode] = [current]
-        var cur = current
+    /// Quality-blended edge cost.
+    /// quality=0 → all edges treated equally (pure distance).
+    /// quality=1 → condition penalties fully amplified (avoids bad roads).
+    private static func blendedCost(edge: DBEdge, quality: Double) -> Double {
+        let base     = 1.0
+        let penalty  = DBEdge.conditionMultiplier(edge.condition)
+        let strength = 5.0
+        let mult     = (1 - quality) * base + quality * (base + (penalty - base) * strength)
+        return edge.distanceM * mult
+    }
+
+    private static func reconstructPath(cameFrom: [Int64: Int64], end: Int64) -> [Int64] {
+        var path = [end]
+        var cur  = end
         while let prev = cameFrom[cur] {
             path.append(prev)
             cur = prev
@@ -68,19 +78,18 @@ enum AStar {
     }
 
     private struct OpenItem {
-        let node: GraphNode
-        let f: Double
+        let id: Int64
+        let f:  Double
     }
 }
 
-/// Simple binary-heap priority queue
+// MARK: - Priority Queue (min-heap)
+
 struct PriorityQueue<T> {
     private var heap: [T] = []
     private let areSorted: (T, T) -> Bool
 
-    init(sort: @escaping (T, T) -> Bool) {
-        self.areSorted = sort
-    }
+    init(sort: @escaping (T, T) -> Bool) { areSorted = sort }
 
     var isEmpty: Bool { heap.isEmpty }
 
@@ -93,7 +102,7 @@ struct PriorityQueue<T> {
         guard !heap.isEmpty else { return nil }
         heap.swapAt(0, heap.count - 1)
         let item = heap.removeLast()
-        siftDown(0)
+        if !heap.isEmpty { siftDown(0) }
         return item
     }
 
@@ -101,24 +110,23 @@ struct PriorityQueue<T> {
         var child = index
         while child > 0 {
             let parent = (child - 1) / 2
-            if areSorted(heap[child], heap[parent]) {
-                heap.swapAt(child, parent)
-                child = parent
-            } else { break }
+            guard areSorted(heap[child], heap[parent]) else { break }
+            heap.swapAt(child, parent)
+            child = parent
         }
     }
 
     private mutating func siftDown(_ index: Int) {
         var parent = index
         while true {
-            let left = 2*parent + 1
+            let left  = 2 * parent + 1
             let right = left + 1
-            var candidate = parent
-            if left < heap.count && areSorted(heap[left], heap[candidate]) { candidate = left }
-            if right < heap.count && areSorted(heap[right], heap[candidate]) { candidate = right }
-            if candidate == parent { return }
-            heap.swapAt(parent, candidate)
-            parent = candidate
+            var best  = parent
+            if left  < heap.count && areSorted(heap[left],  heap[best]) { best = left  }
+            if right < heap.count && areSorted(heap[right], heap[best]) { best = right }
+            guard best != parent else { return }
+            heap.swapAt(parent, best)
+            parent = best
         }
     }
 }

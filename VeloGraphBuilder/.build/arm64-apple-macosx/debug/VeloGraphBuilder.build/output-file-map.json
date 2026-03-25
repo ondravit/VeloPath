@@ -1,0 +1,40 @@
+{
+  "": {
+    "swift-dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/master.swiftdeps"
+  },
+  "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/Sources/VeloGraphBuilder/GeoJSONParser.swift": {
+    "dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GeoJSONParser.d",
+    "object": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GeoJSONParser.swift.o",
+    "swiftmodule": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GeoJSONParser~partial.swiftmodule",
+    "swift-dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GeoJSONParser.swiftdeps",
+    "diagnostics": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GeoJSONParser.dia"
+  },
+  "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/Sources/VeloGraphBuilder/GraphBuilder.swift": {
+    "dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GraphBuilder.d",
+    "object": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GraphBuilder.swift.o",
+    "swiftmodule": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GraphBuilder~partial.swiftmodule",
+    "swift-dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GraphBuilder.swiftdeps",
+    "diagnostics": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/GraphBuilder.dia"
+  },
+  "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/Sources/VeloGraphBuilder/Haversine.swift": {
+    "dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/Haversine.d",
+    "object": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/Haversine.swift.o",
+    "swiftmodule": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/Haversine~partial.swiftmodule",
+    "swift-dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/Haversine.swiftdeps",
+    "diagnostics": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/Haversine.dia"
+  },
+  "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/Sources/VeloGraphBuilder/SQLiteWriter.swift": {
+    "dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/SQLiteWriter.d",
+    "object": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/SQLiteWriter.swift.o",
+    "swiftmodule": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/SQLiteWriter~partial.swiftmodule",
+    "swift-dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/SQLiteWriter.swiftdeps",
+    "diagnostics": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/SQLiteWriter.dia"
+  },
+  "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/Sources/VeloGraphBuilder/main.swift": {
+    "dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/main.d",
+    "object": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/main.swift.o",
+    "swiftmodule": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/main.swiftdeps",
+    "diagnostics": "/Users/ondrejvit/Documents/AppsIOS/VeloPath/VeloGraphBuilder/.build/arm64-apple-macosx/debug/VeloGraphBuilder.build/main.dia"
+  }
+}
