@@ -33,8 +33,9 @@ struct SidePanel: View {
                     }
                 }
                 .padding(.trailing, 4)
-                // Use safe-area-relative top padding instead of a hardcoded magic number.
-                .padding(.top, 12)
+                // Extra top padding so the MapKit compass (appears on rotation)
+                // has room to display above these buttons without overlap.
+                .padding(.top, 76)
             }
             Spacer()
         }

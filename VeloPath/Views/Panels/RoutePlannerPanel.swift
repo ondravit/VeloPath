@@ -23,17 +23,16 @@ struct RoutePlannerPanel: View {
 
     // MARK: - Body
     //
-    // Layout at each detent (approximate, iPhone 15):
-    //   collapsed  100 pt  → drag-indicator + vertically centred header + distance
-    //   medium    ~426 pt  → header + distance + constrained waypoint list (≤160 pt) + slider
-    //   large      full    → header + distance + unconstrained waypoint list + slider
+    // Two states only:
+    //   collapsed  ~115 pt  → drag-indicator + vertically centred header + distance
+    //   medium     ~50 %    → header + distance + scrollable waypoint list + slider
     //
     var body: some View {
         VStack(spacing: 0) {
 
             if selectedDetent == Self.collapsedDetent {
 
-                // ── Collapsed: centre the two always-visible rows vertically ──
+                // ── Collapsed: vertically centre the summary rows ──────────
                 Spacer(minLength: 0)
                 headerRow
                 distanceRow
@@ -41,7 +40,7 @@ struct RoutePlannerPanel: View {
 
             } else {
 
-                // ── Medium / Large ─────────────────────────────────────────
+                // ── Medium ─────────────────────────────────────────────────
                 headerRow
                 distanceRow
                 Divider()
@@ -49,41 +48,53 @@ struct RoutePlannerPanel: View {
                 if routePlan.points.isEmpty {
                     emptyStateView
                 } else {
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            ForEach(0..<routePlan.points.count, id: \.self) { i in
-                                TimelineRow(
-                                    index:        i,
-                                    totalCount:   routePlan.points.count,
-                                    coord:        routePlan.points[i],
-                                    onDelete: {
-                                        withAnimation {
-                                            if routePlan.points.indices.contains(i) {
-                                                routePlan.points.remove(at: i)
-                                            }
-                                        }
-                                    },
-                                    onInsertAfter: {
-                                        insertionIndex    = i + 1
-                                        isPlacingWaypoint = true
-                                    },
-                                    onInsertCurrentLocationAfter: userLocation.map { loc in
-                                        {
-                                            withAnimation {
-                                                routePlan.points.insert(loc, at: i + 1)
-                                            }
+                    List {
+                        ForEach(routePlan.points.indices, id: \.self) { i in
+                            TimelineRow(
+                                index:        i,
+                                totalCount:   routePlan.points.count,
+                                coord:        routePlan.points[i],
+                                onDelete: {
+                                    withAnimation {
+                                        if routePlan.points.indices.contains(i) {
+                                            routePlan.points.remove(at: i)
                                         }
                                     }
-                                )
-                            }
-                            appendButton
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 6)
+                                },
+                                onInsertAfter: {
+                                    insertionIndex    = i + 1
+                                    isPlacingWaypoint = true
+                                },
+                                onInsertCurrentLocationAfter: userLocation.map { loc in
+                                    {
+                                        withAnimation {
+                                            routePlan.points.insert(loc, at: i + 1)
+                                        }
+                                    }
+                                }
+                            )
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                         }
+                        .onMove { from, to in
+                            routePlan.points.move(fromOffsets: from, toOffset: to)
+                            NotificationCenter.default.post(name: .recalculateRoute, object: nil)
+                        }
+
+                        appendButton
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 6)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .moveDisabled(true)
                     }
-                    // Medium: cap so the slider stays on-screen.
-                    // Large: expand to fill all space above the slider.
-                    .frame(maxHeight: selectedDetent == .medium ? 160 : .infinity)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .environment(\.editMode, .constant(.active))
+                    // Fill all remaining height above the quality slider.
+                    .frame(maxHeight: .infinity)
                     .layoutPriority(1)
                 }
 
@@ -91,21 +102,12 @@ struct RoutePlannerPanel: View {
                 qualitySliderSection
                     .padding(.horizontal)
                     .padding(.top, 10)
-                    // Extra bottom padding in .large so the label clears the home indicator.
-                    .padding(.bottom, selectedDetent == .large ? 24 : 10)
+                    .padding(.bottom, 10)
             }
 
-            // Always-present spacer ensures the VStack fills the full sheet height,
-            // eliminating any transparent gap at the bottom edge.
-            if selectedDetent != .large {
-                Spacer(minLength: 0)
-            }
         }
-        // Cover the home-indicator region with the sheet's own background.
-        .background(.ultraThinMaterial)
-        .ignoresSafeArea()
         .onChange(of: routePlan.points.count) { oldCount, newCount in
-            if oldCount == 0, newCount > 0, selectedDetent == Self.collapsedDetent {
+            if newCount >= 2, oldCount < 2, selectedDetent == Self.collapsedDetent {
                 withAnimation { selectedDetent = .medium }
             }
         }
@@ -121,6 +123,31 @@ struct RoutePlannerPanel: View {
             Text("Plánovač trasy")
                 .font(.headline)
             Spacer()
+
+            // Reverse — only meaningful with 2+ waypoints
+            if routePlan.points.count >= 2 {
+                Button {
+                    withAnimation { routePlan.points.reverse() }
+                } label: {
+                    Image(systemName: "arrow.left.arrow.right")
+                        .imageScale(.large)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Clear all — shown whenever any waypoint exists
+            if !routePlan.points.isEmpty {
+                Button {
+                    withAnimation { routePlan.points.removeAll() }
+                } label: {
+                    Image(systemName: "trash")
+                        .imageScale(.large)
+                        .foregroundStyle(.red.opacity(0.75))
+                }
+                .buttonStyle(.plain)
+            }
+
             Button {
                 NotificationCenter.default.post(name: .exportGPX, object: nil)
             } label: {
@@ -129,6 +156,7 @@ struct RoutePlannerPanel: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+
             Button { showAbout = true } label: {
                 Image(systemName: "info.circle")
                     .imageScale(.large)
@@ -165,7 +193,7 @@ struct RoutePlannerPanel: View {
     // MARK: - Empty state
 
     private var emptyStateView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Image(systemName: "map")
                 .font(.system(size: 36))
                 .foregroundStyle(.secondary.opacity(0.5))
@@ -173,6 +201,21 @@ struct RoutePlannerPanel: View {
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
+            // Quick-start: set the first point directly to the user's GPS position.
+            if let loc = userLocation {
+                Button {
+                    withAnimation { routePlan.points.append(loc) }
+                } label: {
+                    Label("Nastavit start na aktuální polohu", systemImage: "location.fill")
+                        .font(.subheadline)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
@@ -324,8 +367,6 @@ struct TimelineRow: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "line.3.horizontal")
-                    .foregroundStyle(.secondary.opacity(0.4))
                 Button(action: onDelete) {
                     Image(systemName: "xmark")
                         .font(.system(size: 12, weight: .bold))
