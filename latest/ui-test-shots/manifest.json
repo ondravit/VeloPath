@@ -1,0 +1,41 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "98A0BFA3-CEC3-4FD6-9916-5A2149774DBF",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "978C100C-9757-4205-AE7B-D82BCFD3219A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "share-sheet_0_C061A547-194E-4C38-8D32-1B75DD651FDD.png",
+        "timestamp" : 1795094981.953
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "98A0BFA3-CEC3-4FD6-9916-5A2149774DBF",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "76EF6226-5A89-4BE9-9A6B-059AD7701667.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "route-by-tapping_0_1C78F7DC-108C-4A79-9D4D-5369F706F3F3.png",
+        "timestamp" : 1795094972.901
+      }
+    ],
+    "testIdentifier" : "VeloPathUITests/testPlanRouteByTappingAndExport()",
+    "testIdentifierURL" : "test://com.apple.xcode/VeloPath/VeloPathUITests/VeloPathUITests/testPlanRouteByTappingAndExport"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "98A0BFA3-CEC3-4FD6-9916-5A2149774DBF",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "2360201B-9A33-4D09-88B3-7FEE586D77D7.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "after-search_0_F06BAA7B-4834-498D-92FE-40D5011FF3FD.png",
+        "timestamp" : 1795095011.035
+      }
+    ],
+    "testIdentifier" : "VeloPathUITests/testSearchAddsWaypoint()",
+    "testIdentifierURL" : "test://com.apple.xcode/VeloPath/VeloPathUITests/VeloPathUITests/testSearchAddsWaypoint"
+  }
+]

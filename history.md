@@ -2,3 +2,4 @@
 - run 4 500e37f core=success build=success shots=success ipa=success 2026-11-19T12:52:51Z
 - run 5 17aac2c core=success build=success shots=success ipa=success 2026-11-19T13:04:31Z
 - run 6 4bde3a0 core=success build=success shots=success ipa=success 2026-11-19T13:16:50Z
+- run 7 baf3416 core=success build=success shots=success ipa=success 2026-11-19T13:32:37Z
