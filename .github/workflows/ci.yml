@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main, rebuild-v2]
+    paths-ignore: ["**.md", "pipeline/**", "docs/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: Test, build, screenshots, IPA
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          mkdir -p ci-out
+          ls -d /Applications/Xcode*.app
+          XC=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XC"
+          xcodebuild -version | tee ci-out/xcode-version.txt
+          xcrun simctl list runtimes | tee -a ci-out/xcode-version.txt
+
+      - name: VeloCore unit tests
+        id: core
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          cd VeloCore
+          swift test 2>&1 | tee ../ci-out/core-tests.log
+
+      - name: Build app for simulator
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          xcodebuild -project VeloPath.xcodeproj -scheme VeloPath -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ci-out/build.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" ci-out/build.log
+
+      - name: Simulator screenshots
+        id: shots
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: scripts/ci-screenshots.sh
+
+      - name: Unsigned IPA for sideloading
+        id: ipa
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: scripts/ci-unsigned-ipa.sh
+
+      - name: Publish report
+        if: always()
+        env:
+          CORE: ${{ steps.core.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          SHOTS: ${{ steps.shots.outcome }}
+          IPA: ${{ steps.ipa.outcome }}
+        run: scripts/ci-publish-report.sh
+
+      - name: Fail if something failed
+        if: steps.core.outcome != 'success' || steps.build.outcome != 'success'
+        run: exit 1

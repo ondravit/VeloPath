@@ -1,17 +1,14 @@
-//
-//  VeloPathApp.swift
-//  VeloPath
-//
-//  Created by Ondřej Vít on 07.10.2025.
-//
-
 import SwiftUI
 
 @main
-struct RoadNavigationDemoApp: App {
+struct VeloPathApp: App {
+    @State private var store = PlannerStore()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(store)
+                .task { await store.start() }
         }
     }
 }

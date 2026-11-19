@@ -1,4 +1,17 @@
-VeloPath/Resources/*.geojson
-
-# Swift Package Manager build artifacts
-VeloGraphBuilder/.build/
+.DS_Store
+xcuserdata/
+*.xcuserstate
+build/
+build-device/
+DerivedData/
+.build/
+.swiftpm/
+Payload/
+*.ipa
+ci-out/
+data/raw/
+data/build/
+__pycache__/
+*.pyc
+legacy/
+.claude/settings.local.json
