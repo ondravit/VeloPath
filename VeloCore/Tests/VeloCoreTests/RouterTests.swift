@@ -128,9 +128,10 @@ final class RouterTests: XCTestCase {
         let pts = [
             GeoCoordinate(latitude: 50.2092, longitude: 15.8327),
             GeoCoordinate(latitude: 50.2365, longitude: 15.8900),
-            GeoCoordinate(latitude: 50.1900, longitude: 15.9300),
+            GeoCoordinate(latitude: 50.1700, longitude: 15.8000),
         ].compactMap { router.snap($0) }
         XCTAssertEqual(pts.count, 3)
+        guard pts.count == 3 else { return }
         let route = try router.route(through: pts, options: RoutingOptions(surfacePriority: .best))
         XCTAssertEqual(route.legs.count, 2)
         XCTAssertEqual(route.distance, route.legs[0].distance + route.legs[1].distance, accuracy: 1e-6)
