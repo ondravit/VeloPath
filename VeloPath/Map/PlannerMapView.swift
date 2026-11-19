@@ -85,7 +85,11 @@ struct PlannerMapView: UIViewRepresentable {
         private var appliedRouteRevision = -1
         private var conditionOverlays: [ConditionOverlay] = []
         private var appliedChunkIDs: [String] = []
-        private var conditionsVisible = false
+        private var conditionsShown = false
+        private var wantsConditions = false
+        private var zoomAllowsConditions = true
+        /// Above this latitude span the condition layer is hidden (too dense, too costly to draw).
+        static let maxConditionSpan = 1.6
         private var appliedStyle: MapStyleChoice?
         private var appliedCameraID: UUID?
         private var draggingID: UUID?
@@ -218,15 +222,28 @@ struct PlannerMapView: UIViewRepresentable {
                     return overlay
                 }
                 appliedChunkIDs = ids
-                conditionsVisible = false
+                conditionsShown = false
             }
-            if visible != conditionsVisible {
-                if visible {
-                    for o in conditionOverlays { map.insertOverlay(o, at: 0, level: .aboveRoads) }
-                } else {
-                    map.removeOverlays(conditionOverlays)
-                }
-                conditionsVisible = visible
+            wantsConditions = visible
+            refreshConditionVisibility(on: map)
+        }
+
+        private func refreshConditionVisibility(on map: MKMapView) {
+            let show = wantsConditions && zoomAllowsConditions
+            guard show != conditionsShown else { return }
+            if show {
+                for o in conditionOverlays { map.insertOverlay(o, at: 0, level: .aboveRoads) }
+            } else {
+                map.removeOverlays(conditionOverlays)
+            }
+            conditionsShown = show
+        }
+
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            let allows = mapView.region.span.latitudeDelta < Self.maxConditionSpan
+            if allows != zoomAllowsConditions {
+                zoomAllowsConditions = allows
+                refreshConditionVisibility(on: mapView)
             }
         }
 

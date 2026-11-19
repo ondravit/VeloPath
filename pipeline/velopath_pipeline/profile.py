@@ -71,6 +71,9 @@ ROAD_CLASSES = {
 # Ways of these classes need an explicit bicycle permission.
 NEEDS_BIKE_PERMISSION = {"pedestrian", "footway", "path", "bridleway", "trunk", "trunk_link"}
 
+# Parking aisles and driveways only bloat the graph; waypoints there snap to the street.
+SERVICE_EXCLUDED = {"parking_aisle", "driveway", "drive-through", "emergency_access"}
+
 OPPOSITE_CYCLEWAY = {"opposite", "opposite_lane", "opposite_track", "opposite_share_busway"}
 
 
@@ -125,10 +128,6 @@ def classify_way(tags: Mapping[str, str]) -> Optional[WayProfile]:
         return None
     if _tag(tags, "motorroad") == "yes":
         return None
-    for key in ("construction", "proposed", "disused", "abandoned"):
-        if tags.get(key) and highway == key:
-            return None
-
     bicycle = _tag(tags, "bicycle")
     if bicycle in ("no", "use_sidepath", "private"):
         return None
@@ -142,6 +141,8 @@ def classify_way(tags: Mapping[str, str]) -> Optional[WayProfile]:
         return None
 
     road_class = ROAD_CLASSES[highway]
+    if highway == "service" and _tag(tags, "service") in SERVICE_EXCLUDED:
+        return None
 
     # --- surface -------------------------------------------------------------------
     raw_surface = _tag(tags, "surface")

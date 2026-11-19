@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches: [main, rebuild-v2]
-    paths-ignore: ["**.md", "pipeline/**", "docs/**"]
+    paths-ignore: ["**.md", "docs/**"]
   workflow_dispatch:
 
 permissions:
@@ -31,6 +31,9 @@ jobs:
           sudo xcode-select -s "$XC"
           xcodebuild -version | tee ci-out/xcode-version.txt
           xcrun simctl list runtimes | tee -a ci-out/xcode-version.txt
+
+      - name: Fetch road graph
+        run: bash scripts/fetch-graph.sh
 
       - name: VeloCore unit tests
         id: core

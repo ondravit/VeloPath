@@ -256,12 +256,17 @@ struct RouteSummaryView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .labelStyle(CompactLabelStyle())
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 }
                 Spacer()
                 if let url = store.gpxFileURL {
                     ShareLink(item: url, preview: SharePreview(store.routeTitle, image: Image(systemName: "bicycle"))) {
-                        Label("GPX", systemImage: "square.and.arrow.up")
-                            .font(.headline)
+                        HStack(spacing: 6) {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("GPX")
+                        }
+                        .font(.headline)
                     }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
