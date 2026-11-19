@@ -257,7 +257,7 @@ struct RouteSummaryView: View {
                     .foregroundStyle(.secondary)
                     .labelStyle(CompactLabelStyle())
                     .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
+                    .minimumScaleFactor(0.75)
                 }
                 Spacer()
                 if let url = store.gpxFileURL {
@@ -270,6 +270,8 @@ struct RouteSummaryView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
+                    .fixedSize()
+                    .layoutPriority(1)
                     .accessibilityLabel("Exportovat trasu jako GPX")
                 }
             }

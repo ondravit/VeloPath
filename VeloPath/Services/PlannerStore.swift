@@ -106,7 +106,17 @@ final class PlannerStore {
         }
 
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-uiDemo") {
+        if arguments.contains("-uiTestReset") {
+            demoMode = true
+            UserDefaults.standard.removeObject(forKey: "plan.current.v1")
+        }
+        if let i = arguments.firstIndex(of: "-uiCamera"), i + 1 < arguments.count {
+            let parts = arguments[i + 1].split(separator: ",").compactMap { Double($0) }
+            if parts.count == 3 {
+                cameraRequest = CameraRequest(target: .region(center: GeoCoordinate(latitude: parts[0], longitude: parts[1]),
+                                                              latitudeDelta: parts[2]), animated: false)
+            }
+        } else if arguments.contains("-uiDemo") {
             demoMode = true
             UserDefaults.standard.removeObject(forKey: "plan.current.v1")
             await loadDemoRoute()

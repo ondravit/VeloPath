@@ -10,12 +10,28 @@
 		A1C0DE0000000000000000B1 /* VeloCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1C0DE0000000000000000A2 /* VeloCore */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B2D0E00000000000000000B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6FDE69B02E9584CE00A846D7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6FDE69B72E9584CE00A846D7;
+			remoteInfo = VeloPath;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		6FDE69B82E9584CE00A846D7 /* VeloPath.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VeloPath.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1C0DE0000000000000000C1 /* VeloCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = VeloCore; sourceTree = "<group>"; };
+		B2D0E00000000000000000A1 /* VeloPathUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VeloPathUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		B2D0E00000000000000000C1 /* VeloPathUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VeloPathUITests;
+			sourceTree = "<group>";
+		};
 		6FDE69BA2E9584CE00A846D7 /* VeloPath */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = VeloPath;
@@ -24,6 +40,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B2D0E00000000000000000D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FDE69B52E9584CE00A846D7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -39,6 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				6FDE69BA2E9584CE00A846D7 /* VeloPath */,
+				B2D0E00000000000000000C1 /* VeloPathUITests */,
 				A1C0DE0000000000000000C1 /* VeloCore */,
 				6FDE69B92E9584CE00A846D7 /* Products */,
 			);
@@ -48,6 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				6FDE69B82E9584CE00A846D7 /* VeloPath.app */,
+				B2D0E00000000000000000A1 /* VeloPathUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,6 +80,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B2D0E00000000000000000E1 /* VeloPathUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B2D0E00000000000000000F1 /* Build configuration list for PBXNativeTarget "VeloPathUITests" */;
+			buildPhases = (
+				B2D0E00000000000000000D1 /* Sources */,
+				B2D0E00000000000000000D2 /* Frameworks */,
+				B2D0E00000000000000000D3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B2D0E00000000000000000B2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B2D0E00000000000000000C1 /* VeloPathUITests */,
+			);
+			name = VeloPathUITests;
+			packageProductDependencies = (
+			);
+			productName = VeloPathUITests;
+			productReference = B2D0E00000000000000000A1 /* VeloPathUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		6FDE69B72E9584CE00A846D7 /* VeloPath */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6FDE69C32E9584D000A846D7 /* Build configuration list for PBXNativeTarget "VeloPath" */;
@@ -91,6 +139,10 @@
 					6FDE69B72E9584CE00A846D7 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
+					B2D0E00000000000000000E1 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = 6FDE69B72E9584CE00A846D7;
+					};
 				};
 			};
 			buildConfigurationList = 6FDE69B32E9584CE00A846D7 /* Build configuration list for PBXProject "VeloPath" */;
@@ -112,11 +164,19 @@
 			projectRoot = "";
 			targets = (
 				6FDE69B72E9584CE00A846D7 /* VeloPath */,
+				B2D0E00000000000000000E1 /* VeloPathUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B2D0E00000000000000000D3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FDE69B62E9584CE00A846D7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -127,6 +187,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B2D0E00000000000000000D1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FDE69B42E9584CE00A846D7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -136,7 +203,51 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		B2D0E00000000000000000B2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6FDE69B72E9584CE00A846D7 /* VeloPath */;
+			targetProxy = B2D0E00000000000000000B1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		B2D0E00000000000000000F2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VQMBV2PB75;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ondrejvit.VeloPathUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = VeloPath;
+			};
+			name = Debug;
+		};
+		B2D0E00000000000000000F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VQMBV2PB75;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ondrejvit.VeloPathUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = VeloPath;
+			};
+			name = Release;
+		};
 		6FDE69C12E9584D000A846D7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -325,6 +436,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B2D0E00000000000000000F1 /* Build configuration list for PBXNativeTarget "VeloPathUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2D0E00000000000000000F2 /* Debug */,
+				B2D0E00000000000000000F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		6FDE69B32E9584CE00A846D7 /* Build configuration list for PBXProject "VeloPath" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

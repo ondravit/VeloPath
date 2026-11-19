@@ -11,11 +11,16 @@ mkdir -p ci-out
   echo "| core tests | ${CORE} |"
   echo "| simulator build | ${BUILD} |"
   echo "| screenshots | ${SHOTS} |"
+  echo "| UI tests | ${UITESTS} |"
   echo "| unsigned IPA | ${IPA} |"
   echo
   echo '## Compiler errors'
   echo '```'
   grep -E "error:" ci-out/build.log ci-out/build-device.log 2>/dev/null | sort -u | head -150
+  echo '```'
+  echo '## UI tests'
+  echo '```'
+  grep -E "Test Case .*(passed|failed)|error:" ci-out/ui-tests.log 2>/dev/null | head -40
   echo '```'
   echo '## Core test summary'
   echo '```'
@@ -25,6 +30,7 @@ mkdir -p ci-out
 grep -E "warning:" ci-out/build.log 2>/dev/null | grep -v "/build/SourcePackages/" | sort -u > ci-out/warnings.txt || true
 tail -c 400000 ci-out/build.log > ci-out/build-tail.log 2>/dev/null || true
 rm -f ci-out/build.log ci-out/build-device.log
+tail -c 200000 ci-out/ui-tests.log > ci-out/ui-tests-tail.log 2>/dev/null && rm -f ci-out/ui-tests.log
 
 REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 rm -rf ../reports

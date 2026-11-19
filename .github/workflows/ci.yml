@@ -59,6 +59,12 @@ jobs:
         continue-on-error: true
         run: bash scripts/ci-screenshots.sh
 
+      - name: UI tests
+        id: uitests
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: bash scripts/ci-ui-tests.sh
+
       - name: Unsigned IPA for sideloading
         id: ipa
         if: steps.build.outcome == 'success'
@@ -71,6 +77,7 @@ jobs:
           CORE: ${{ steps.core.outcome }}
           BUILD: ${{ steps.build.outcome }}
           SHOTS: ${{ steps.shots.outcome }}
+          UITESTS: ${{ steps.uitests.outcome }}
           IPA: ${{ steps.ipa.outcome }}
         run: bash scripts/ci-publish-report.sh
 
