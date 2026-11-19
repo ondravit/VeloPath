@@ -160,6 +160,15 @@ final class RouterTests: XCTestCase {
         XCTAssertGreaterThan(oneWays, 10)
     }
 
+    func testClimbHysteresis() {
+        let flatNoise = [200.0, 202, 199, 201, 200, 203, 200]
+        XCTAssertEqual(Router.climb(of: flatNoise, threshold: 4).ascent, 0)
+        let hill = [200.0, 205, 210, 220, 215, 230, 210, 200]
+        let c = Router.climb(of: hill, threshold: 4)
+        XCTAssertEqual(c.ascent, 35, accuracy: 1e-9)   // 200→220, 215→230
+        XCTAssertEqual(c.descent, 35, accuracy: 1e-9)  // 220→215, 230→210→200
+    }
+
     func testRoutingPerformance() throws {
         let router = Router(graph: Self.graph)
         let a = try XCTUnwrap(router.snap(GeoCoordinate(latitude: 50.17, longitude: 15.80)))

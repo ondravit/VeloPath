@@ -26,7 +26,10 @@ struct RootView: View {
                     tap: { store.addWaypoint(at: $0) },
                     longPress: { store.insertViaPoint(at: $0) },
                     moveWaypoint: { store.moveWaypoint($0, to: $1) },
-                    deleteWaypoint: { store.removeWaypoint($0) }
+                    deleteWaypoint: { store.removeWaypoint($0) },
+                    conditionLayerShown: { shown in
+                        if store.conditionLayerOnScreen != shown { store.conditionLayerOnScreen = shown }
+                    }
                 )
             )
             .ignoresSafeArea()
@@ -107,8 +110,9 @@ struct MapControls: View {
     var body: some View {
         @Bindable var store = store
         HStack(alignment: .top) {
-            if store.showsConditionLayer {
+            if store.conditionLayerOnScreen {
                 ConditionLegend()
+                    .transition(.opacity)
             }
             Spacer()
             VStack(spacing: 10) {

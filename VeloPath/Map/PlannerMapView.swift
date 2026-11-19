@@ -9,6 +9,8 @@ struct MapActions {
     var longPress: (GeoCoordinate) -> Void
     var moveWaypoint: (UUID, GeoCoordinate) -> Void
     var deleteWaypoint: (UUID) -> Void
+    /// Reports whether the pavement-condition layer is currently drawn (it is hidden when zoomed out).
+    var conditionLayerShown: (Bool) -> Void
 }
 
 /// Imperative access to the MKMapView for the floating map buttons.
@@ -199,6 +201,10 @@ struct PlannerMapView: UIViewRepresentable {
                     }
                     map.setVisibleMapRect(rect, edgePadding: padding, animated: request.animated)
                 }
+            case .region(let center, let latitudeDelta):
+                let region = MKCoordinateRegion(center: center.clCoordinate,
+                                                span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: latitudeDelta * 0.3))
+                map.setRegion(region, animated: request.animated)
             case .bounds(let b):
                 let tl = MKMapPoint(CLLocationCoordinate2D(latitude: b.maxLatitude, longitude: b.minLongitude))
                 let br = MKMapPoint(CLLocationCoordinate2D(latitude: b.minLatitude, longitude: b.maxLongitude))
@@ -246,6 +252,8 @@ struct PlannerMapView: UIViewRepresentable {
                 map.removeOverlays(conditionOverlays)
             }
             conditionsShown = show
+            let report = parent.actions.conditionLayerShown
+            DispatchQueue.main.async { report(show) }
         }
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {

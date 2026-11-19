@@ -27,6 +27,8 @@ final class PlannerStore {
     private(set) var coverage: GeoBounds?
     private(set) var gpxFileURL: URL?
     var toast: Toast?
+    /// Whether the condition overlay is actually drawn right now (zoom dependent).
+    var conditionLayerOnScreen = false
     /// Height of the bottom sheet, used to keep map content clear of it.
     var sheetHeight: CGFloat = 0
     /// Request for the map to frame something (consumed by the map view).
@@ -69,6 +71,7 @@ final class PlannerStore {
         enum Target: Equatable {
             case coordinates([GeoCoordinate])
             case bounds(GeoBounds)
+            case region(center: GeoCoordinate, latitudeDelta: Double)
         }
         let id = UUID()
         let target: Target
@@ -109,8 +112,8 @@ final class PlannerStore {
             await loadDemoRoute()
         } else if let plan = PlanStorage.loadPlan(), !plan.waypoints.isEmpty {
             await restore(plan)
-        } else if let coverage {
-            cameraRequest = CameraRequest(target: .bounds(coverage), animated: false)
+        } else {
+            showOverview()
         }
 
         if let engine {
@@ -284,9 +287,32 @@ final class PlannerStore {
         }
     }
 
+    /// Initial view without a plan: around the user if location is allowed, otherwise the covered region.
+    private func showOverview() {
+        if location.isAuthorized {
+            location.requestCurrentLocation { [weak self] c in
+                guard let self else { return }
+                if let c, self.coverage?.contains(c) ?? false {
+                    self.cameraRequest = CameraRequest(target: .region(center: c, latitudeDelta: 0.5), animated: false)
+                } else {
+                    self.showCoverage()
+                }
+            }
+        } else {
+            showCoverage()
+        }
+    }
+
+    private func showCoverage() {
+        guard let coverage else { return }
+        let span = coverage.maxLatitude - coverage.minLatitude
+        // A portrait phone cannot show a wide country well; favour a readable zoom around its centre.
+        cameraRequest = CameraRequest(target: .region(center: coverage.center, latitudeDelta: min(span * 1.6, 4.2)), animated: false)
+    }
+
     func frameRoute() {
         guard !waypoints.isEmpty else {
-            if let coverage { cameraRequest = CameraRequest(target: .bounds(coverage), animated: true) }
+            showCoverage()
             return
         }
         let coords = route?.points ?? waypoints.map(\.coordinate)

@@ -324,6 +324,14 @@ public final class Router {
             elevations = [nil, nil]
             distances = [0, 0]
         }
+        // Prefer climbing computed from the route profile with a small hysteresis: it filters the
+        // residual DEM noise (forest canopy in the surface model) the per-road sums still contain.
+        let known = elevations.compactMap { $0 }
+        if known.count >= 2, known.count * 10 >= elevations.count * 9 {
+            let climb = Router.climb(of: known, threshold: Router.climbThreshold)
+            ascent = climb.ascent
+            descent = climb.descent
+        }
         return RouteLeg(start: source, end: target, points: points, elevations: elevations, distances: distances,
                         pieces: pieces, distance: travelled, ascent: ascent, descent: descent, cost: cost,
                         expandedNodes: expanded)
@@ -382,6 +390,27 @@ public final class Router {
             ds = ds.map { $0 - lo }
         }
         return (pts, eles, ds)
+    }
+
+    /// Minimum elevation change (metres) counted as climbing or descending.
+    public static let climbThreshold = 4.0
+
+    /// Total ascent and descent of an elevation series, ignoring oscillations below `threshold`.
+    public static func climb(of elevations: [Double], threshold: Double) -> (ascent: Double, descent: Double) {
+        guard var reference = elevations.first else { return (0, 0) }
+        var ascent = 0.0
+        var descent = 0.0
+        for e in elevations.dropFirst() {
+            let delta = e - reference
+            if delta >= threshold {
+                ascent += delta
+                reference = e
+            } else if delta <= -threshold {
+                descent -= delta
+                reference = e
+            }
+        }
+        return (ascent, descent)
     }
 
     // MARK: - Multi-leg convenience
