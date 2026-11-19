@@ -1,2 +1,2 @@
--rw-r--r--  1 runner  staff  62290682 Nov 19 13:04 VeloPath-2.0-17aac2c.ipa
+-rw-r--r--  1 runner  staff  62294779 Nov 19 13:16 VeloPath-2.0-4bde3a0.ipa
 https://github.com/ondravit/VeloPath/releases/tag/build-latest
