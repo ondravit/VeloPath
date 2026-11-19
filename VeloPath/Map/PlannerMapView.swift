@@ -169,8 +169,17 @@ struct PlannerMapView: UIViewRepresentable {
 
         func applyCamera(_ request: PlannerStore.CameraRequest?, on map: MKMapView, bottomInset: CGFloat) {
             guard let request, request.id != appliedCameraID else { return }
+            // Before the first layout pass the map has no size and MapKit would zoom out to the whole world.
+            guard map.bounds.width > 50, map.bounds.height > 200 else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self, weak map] in
+                    guard let self, let map else { return }
+                    self.applyCamera(request, on: map, bottomInset: self.parent.bottomInset)
+                }
+                return
+            }
             appliedCameraID = request.id
-            let padding = UIEdgeInsets(top: 90, left: 44, bottom: max(bottomInset, 120) + 30, right: 64)
+            let bottom = min(max(bottomInset, 120) + 30, map.bounds.height * 0.55)
+            let padding = UIEdgeInsets(top: 90, left: 44, bottom: bottom, right: 64)
             switch request.target {
             case .coordinates(let coords):
                 guard !coords.isEmpty else { return }

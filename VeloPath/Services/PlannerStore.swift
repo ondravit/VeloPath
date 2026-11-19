@@ -134,7 +134,11 @@ final class PlannerStore {
     }
 
     private func loadDemoRoute() async {
-        let demo = [
+        let long = ProcessInfo.processInfo.arguments.contains("-uiDemoLong")
+        let demo = long ? [
+            GeoCoordinate(latitude: 50.0875, longitude: 14.4213),   // Praha
+            GeoCoordinate(latitude: 49.1951, longitude: 16.6068),   // Brno
+        ] : [
             GeoCoordinate(latitude: 50.2093, longitude: 15.8326),   // Hradec Králové
             GeoCoordinate(latitude: 50.3562, longitude: 15.9213),   // Jaroměř
             GeoCoordinate(latitude: 50.4166, longitude: 16.1630),   // Náchod

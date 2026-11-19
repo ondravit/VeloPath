@@ -32,6 +32,7 @@ shoot 02-route-compact -uiDemo
 shoot 03-route-medium -uiDemo -uiDetent medium
 shoot 04-route-large -uiDemo -uiDetent large
 shoot 05-settings -uiDemo -uiSettings
+shoot 07-long-route -uiDemo -uiDemoLong
 xcrun simctl ui "$UDID" appearance dark
 shoot 06-dark-medium -uiDemo -uiDetent medium
 
