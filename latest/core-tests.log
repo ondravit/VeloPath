@@ -1,64 +1,64 @@
 Building for debugging...
 [0/8] /Users/runner/work/VeloPath/VeloPath/VeloCore/.build/arm64-apple-macosx/debug/VeloCorePackageTests.derived/runner.swift
 [1/8] Write sources
-[1/8] Copying Fixtures
-[3/8] Write sources
+[2/8] Copying Fixtures
+[4/8] Write sources
 [5/8] Write swift-version-7974D3F7F03D5E95.txt
 [7/15] Emitting module VeloCore
-[8/17] Compiling VeloCore GPXWriter.swift
-[9/17] Compiling VeloCore GeoCoordinate.swift
-[10/17] Compiling VeloCore RoadGraph.swift
-[11/17] Compiling VeloCore RouteModels.swift
-[12/17] Compiling VeloCore Router.swift
-[13/17] Compiling VeloCore RoadAttributes.swift
-[14/17] Compiling VeloCore BinaryHeap.swift
-[15/17] Compiling VeloCore CostModel.swift
+[8/15] Compiling VeloCore GPXWriter.swift
+[9/15] Compiling VeloCore GeoCoordinate.swift
+[10/15] Compiling VeloCore RoadGraph.swift
+[11/15] Compiling VeloCore RoadAttributes.swift
+[12/15] Compiling VeloCore BinaryHeap.swift
+[13/15] Compiling VeloCore CostModel.swift
+[14/17] Compiling VeloCore RouteModels.swift
+[15/17] Compiling VeloCore Router.swift
 [16/20] Compiling VeloCoreTests RouterTests.swift
-[17/20] Compiling VeloCoreTests GPXWriterTests.swift
-[18/20] Emitting module VeloCoreTests
+[17/20] Emitting module VeloCoreTests
+[18/20] Compiling VeloCoreTests GPXWriterTests.swift
 [19/21] Compiling VeloCoreTests resource_bundle_accessor.swift
 [20/23] Compiling VeloCorePackageTests runner.swift
 [21/23] Emitting module VeloCorePackageTests
 [21/23] Write Objects.LinkFileList
 [22/23] Linking VeloCorePackageTests
-Build complete! (33.84s)
-Test Suite 'All tests' started at 2026-11-19 12:31:01.784.
-Test Suite 'VeloCorePackageTests.xctest' started at 2026-11-19 12:31:01.788.
-Test Suite 'GPXWriterTests' started at 2026-11-19 12:31:01.788.
+Build complete! (18.57s)
+Test Suite 'All tests' started at 2026-11-19 12:46:29.950.
+Test Suite 'VeloCorePackageTests.xctest' started at 2026-11-19 12:46:29.951.
+Test Suite 'GPXWriterTests' started at 2026-11-19 12:46:29.951.
 Test Case '-[VeloCoreTests.GPXWriterTests testDocumentStructure]' started.
-Test Case '-[VeloCoreTests.GPXWriterTests testDocumentStructure]' passed (0.055 seconds).
-Test Suite 'GPXWriterTests' passed at 2026-11-19 12:31:01.843.
-	 Executed 1 test, with 0 failures (0 unexpected) in 0.055 (0.055) seconds
-Test Suite 'RouterTests' started at 2026-11-19 12:31:01.843.
+Test Case '-[VeloCoreTests.GPXWriterTests testDocumentStructure]' passed (0.025 seconds).
+Test Suite 'GPXWriterTests' passed at 2026-11-19 12:46:29.976.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.025 (0.025) seconds
+Test Suite 'RouterTests' started at 2026-11-19 12:46:29.976.
 Test Case '-[VeloCoreTests.RouterTests testCancellation]' started.
-Test Case '-[VeloCoreTests.RouterTests testCancellation]' passed (0.010 seconds).
+Test Case '-[VeloCoreTests.RouterTests testCancellation]' passed (0.009 seconds).
 Test Case '-[VeloCoreTests.RouterTests testGraphLoads]' started.
 Test Case '-[VeloCoreTests.RouterTests testGraphLoads]' passed (0.000 seconds).
 Test Case '-[VeloCoreTests.RouterTests testLoadingFromDataMatchesMappedFile]' started.
 Test Case '-[VeloCoreTests.RouterTests testLoadingFromDataMatchesMappedFile]' passed (0.001 seconds).
 Test Case '-[VeloCoreTests.RouterTests testMultiLegRoute]' started.
-Test Case '-[VeloCoreTests.RouterTests testMultiLegRoute]' passed (0.044 seconds).
+Test Case '-[VeloCoreTests.RouterTests testMultiLegRoute]' passed (0.019 seconds).
 Test Case '-[VeloCoreTests.RouterTests testOneWayStreetsAreRespected]' started.
-Test Case '-[VeloCoreTests.RouterTests testOneWayStreetsAreRespected]' passed (0.014 seconds).
+Test Case '-[VeloCoreTests.RouterTests testOneWayStreetsAreRespected]' passed (0.010 seconds).
 Test Case '-[VeloCoreTests.RouterTests testRejectsGarbage]' started.
 Test Case '-[VeloCoreTests.RouterTests testRejectsGarbage]' passed (0.000 seconds).
 Test Case '-[VeloCoreTests.RouterTests testRouterIsReusable]' started.
-Test Case '-[VeloCoreTests.RouterTests testRouterIsReusable]' passed (0.053 seconds).
+Test Case '-[VeloCoreTests.RouterTests testRouterIsReusable]' passed (0.036 seconds).
 Test Case '-[VeloCoreTests.RouterTests testRoutesMatchReference]' started.
-Test Case '-[VeloCoreTests.RouterTests testRoutesMatchReference]' passed (0.294 seconds).
+Test Case '-[VeloCoreTests.RouterTests testRoutesMatchReference]' passed (0.181 seconds).
 Test Case '-[VeloCoreTests.RouterTests testRoutingPerformance]' started.
-/Users/runner/work/VeloPath/VeloPath/VeloCore/Tests/VeloCoreTests/RouterTests.swift:168: Test Case '-[VeloCoreTests.RouterTests testRoutingPerformance]' measured [Time, seconds] average: 0.019, relative standard deviation: 19.874%, values: [0.027733, 0.016548, 0.023102, 0.017053, 0.017092, 0.015438, 0.020765, 0.018486, 0.016345, 0.015731], performanceMetricID:com.apple.XCTPerformanceMetric_WallClockTime, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.100, maxStandardDeviation: 0.100
-Test Case '-[VeloCoreTests.RouterTests testRoutingPerformance]' passed (0.944 seconds).
+/Users/runner/work/VeloPath/VeloPath/VeloCore/Tests/VeloCoreTests/RouterTests.swift:168: Test Case '-[VeloCoreTests.RouterTests testRoutingPerformance]' measured [Time, seconds] average: 0.019, relative standard deviation: 17.783%, values: [0.017103, 0.020983, 0.016390, 0.021322, 0.023962, 0.017135, 0.021596, 0.014790, 0.024298, 0.014840], performanceMetricID:com.apple.XCTPerformanceMetric_WallClockTime, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.100, maxStandardDeviation: 0.100
+Test Case '-[VeloCoreTests.RouterTests testRoutingPerformance]' passed (0.760 seconds).
 Test Case '-[VeloCoreTests.RouterTests testSnapFarAwayFails]' started.
-Test Case '-[VeloCoreTests.RouterTests testSnapFarAwayFails]' passed (0.002 seconds).
+Test Case '-[VeloCoreTests.RouterTests testSnapFarAwayFails]' passed (0.000 seconds).
 Test Case '-[VeloCoreTests.RouterTests testSnapMatchesReference]' started.
-Test Case '-[VeloCoreTests.RouterTests testSnapMatchesReference]' passed (0.025 seconds).
-Test Suite 'RouterTests' passed at 2026-11-19 12:31:03.235.
-	 Executed 11 tests, with 0 failures (0 unexpected) in 1.387 (1.392) seconds
-Test Suite 'VeloCorePackageTests.xctest' passed at 2026-11-19 12:31:03.236.
-	 Executed 12 tests, with 0 failures (0 unexpected) in 1.441 (1.448) seconds
-Test Suite 'All tests' passed at 2026-11-19 12:31:03.236.
-	 Executed 12 tests, with 0 failures (0 unexpected) in 1.441 (1.452) seconds
+Test Case '-[VeloCoreTests.RouterTests testSnapMatchesReference]' passed (0.018 seconds).
+Test Suite 'RouterTests' passed at 2026-11-19 12:46:31.013.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 1.034 (1.037) seconds
+Test Suite 'VeloCorePackageTests.xctest' passed at 2026-11-19 12:46:31.013.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 1.059 (1.062) seconds
+Test Suite 'All tests' passed at 2026-11-19 12:46:31.013.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 1.059 (1.063) seconds
 ◇ Test run started.
 ↳ Testing Library Version: 1902
 ↳ Target Platform: arm64e-apple-macos14.0
