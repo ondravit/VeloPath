@@ -1,0 +1,2 @@
+-rw-r--r--  1 runner  staff  5039356 Nov 19 12:42 VeloPath-2.0-95f40a2.ipa
+https://github.com/ondravit/VeloPath/releases/tag/build-latest
