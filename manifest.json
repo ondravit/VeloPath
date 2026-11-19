@@ -1,0 +1,56 @@
+{
+ "file": "RoadGraph.vpg",
+ "bytes": 97761644,
+ "sha256": "b6328076807a2a4fd78675996a0d3daf69baa605d17c62a4b6521a2423a36049",
+ "nodes": 794336,
+ "edges": 1884618,
+ "geometries": 979149,
+ "coordinates": 4343964,
+ "region": "Česká republika",
+ "built": "2026-11-19T12:34:38+00:00",
+ "sources": [
+  {
+   "name": "OpenStreetMap",
+   "attribution": "© přispěvatelé OpenStreetMap",
+   "license": "ODbL 1.0",
+   "url": "https://www.openstreetmap.org/copyright",
+   "date": "2026-11-17"
+  },
+  {
+   "name": "Stav povrchu silnic – Královéhradecký kraj",
+   "attribution": "Královéhradecký kraj, ÚDRŽBA SILNIC Královéhradeckého kraje a.s. (Data KHK)",
+   "license": "Otevřená data",
+   "url": "https://www.datakhk.cz/datasets/311df195461541069a5690e9491eb092_0",
+   "years": [
+    2017,
+    2024
+   ]
+  },
+  {
+   "name": "Copernicus DEM GLO-30",
+   "attribution": "© DLR e.V. 2010–2014 a © Airbus Defence and Space GmbH 2014–2018, poskytnuto v rámci programu COPERNICUS Evropskou unií a ESA",
+   "license": "Copernicus DEM licence",
+   "url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model"
+  }
+ ],
+ "stats": {
+  "km_by_class": {
+   "cycleway": 4071.4,
+   "living_street": 2024.2,
+   "primary": 5264.8,
+   "residential": 42360.7,
+   "secondary": 15985.1,
+   "service": 19987.3,
+   "shared_path": 524.0,
+   "tertiary": 36392.5,
+   "track": 16402.4,
+   "trunk": 10.3,
+   "unclassified": 11307.7
+  },
+  "km_by_condition_source": {
+   "none": 135424.0,
+   "official": 3221.3,
+   "osm_smoothness": 15685.0
+  }
+ }
+}
